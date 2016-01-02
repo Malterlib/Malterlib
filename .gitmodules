@@ -1,0 +1,282 @@
+[submodule "SDK"]
+        path = SDK
+	url = ../MalterlibSDK
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Algorithm"]
+	path = Malterlib/Algorithm
+	url = ../Malterlib_Algorithm
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Atomic"]
+	path = Malterlib/Atomic
+	url = ../Malterlib_Atomic
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Bit"]
+	path = Malterlib/Bit
+	url = ../Malterlib_Bit
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_CommandLine"]
+	path = Malterlib/CommandLine
+	url = ../Malterlib_CommandLine
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Compression"]
+	path = Malterlib/Compression
+	url = ../Malterlib_Compression
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Concurrency"]
+	path = Malterlib/Concurrency
+	url = ../Malterlib_Concurrency
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Container"]
+	path = Malterlib/Container
+	url = ../Malterlib_Container
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Contract"]
+	path = Malterlib/Contract
+	url = ../Malterlib_Contract
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Core"]
+	path = Malterlib/Core
+	url = ../Malterlib_Core
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_CrashReport"]
+	path = Malterlib/CrashReport
+	url = ../Malterlib_CrashReport
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Cryptography"]
+	path = Malterlib/Cryptography
+	url = ../Malterlib_Cryptography
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Daemon"]
+	path = Malterlib/Daemon
+	url = ../Malterlib_Daemon
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Database"]
+	path = Malterlib/Database
+	url = ../Malterlib_Database
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Debug"]
+	path = Malterlib/Debug
+	url = ../Malterlib_Debug
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Desktop"]
+	path = Malterlib/Desktop
+	url = ../Malterlib_Desktop
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Documentation"]
+	path = Malterlib/Documentation
+	url = ../Malterlib_Documentation
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Encoding"]
+	path = Malterlib/Encoding
+	url = ../Malterlib_Encoding
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Exception"]
+	path = Malterlib/Exception
+	url = ../Malterlib_Exception
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_File"]
+	path = Malterlib/File
+	url = ../Malterlib_File
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Function"]
+	path = Malterlib/Function
+	url = ../Malterlib_Function
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Graphics"]
+	path = Malterlib/Graphics
+	url = ../Malterlib_Graphics
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Instrumentation"]
+	path = Malterlib/Instrumentation
+	url = ../Malterlib_Instrumentation
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_InterProcess"]
+	path = Malterlib/InterProcess
+	url = ../Malterlib_InterProcess
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Intrusive"]
+	path = Malterlib/Intrusive
+	url = ../Malterlib_Intrusive
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Iterator"]
+	path = Malterlib/Iterator
+	url = ../Malterlib_Iterator
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Log"]
+	path = Malterlib/Log
+	url = ../Malterlib_Log
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Memory"]
+	path = Malterlib/Memory
+	url = ../Malterlib_Memory
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Meta"]
+	path = Malterlib/Meta
+	url = ../Malterlib_Meta
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Mongo"]
+	path = Malterlib/Mongo
+	url = ../Malterlib_Mongo
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Network"]
+	path = Malterlib/Network
+	url = ../Malterlib_Network
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Numeric"]
+	path = Malterlib/Numeric
+	url = ../Malterlib_Numeric
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Preprocessor"]
+	path = Malterlib/Preprocessor
+	url = ../Malterlib_Preprocessor
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Process"]
+	path = Malterlib/Process
+	url = ../Malterlib_Process
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Security"]
+	path = Malterlib/Security
+	url = ../Malterlib_Security
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_SQL"]
+	path = Malterlib/SQL
+	url = ../Malterlib_SQL
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_STL"]
+	path = Malterlib/STL
+	url = ../Malterlib_STL
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Storage"]
+	path = Malterlib/Storage
+	url = ../Malterlib_Storage
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Stream"]
+	path = Malterlib/Stream
+	url = ../Malterlib_Stream
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_String"]
+	path = Malterlib/String
+	url = ../Malterlib_String
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_System"]
+	path = Malterlib/System
+	url = ../Malterlib_System
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Test"]
+	path = Malterlib/Test
+	url = ../Malterlib_Test
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Thread"]
+	path = Malterlib/Thread
+	url = ../Malterlib_Thread
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Time"]
+	path = Malterlib/Time
+	url = ../Malterlib_Time
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Tools"]
+	path = Malterlib/Tools
+	url = ../Malterlib_Tools
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Type"]
+	path = Malterlib/Type
+	url = ../Malterlib_Type
+        fetchRecurseSubmodules = on-demand
+	branch = master
+
+[submodule "Malterlib_Web"]
+	path = Malterlib/Web
+	url = ../Malterlib_Web
+        fetchRecurseSubmodules = on-demand
+	branch = master
+

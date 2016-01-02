@@ -33,4 +33,4 @@ Target.PlatformToolsetCompiler "/Development/Malterlib/Tools/llvm/unstable/build
 }
 
 // Import all roots
-Import "*/*.MHeader"
+Import "Malterlib/Core/Malterlib.MHeader"
