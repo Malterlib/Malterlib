@@ -1,0 +1,36 @@
+// Copyright © 2015 Hansoft AB
+// Distributed under the MIT license, see license text in LICENSE.Malterlib
+
+Property
+{
+	ProductCompanyUniqueIdentifier "com.malterlib"
+	ProductCompany "Malterlib"
+	{
+		!!ProductCompany ""
+	}
+
+	MalterlibEnableInternalTests true
+	{
+		!!MalterlibEnableInternalTests ""
+	}
+
+	MalterlibTestsMem_EnablePerfTests true // User: Enable performance memory tests (default true)
+	{
+		!!MalterlibTestsMem_EnablePerfTests ""
+	}
+
+	DefaultOSXPlatform "10.7"
+}
+
+Target.PlatformToolsetCompiler "/Development/Malterlib/Tools/llvm/unstable/build/make/bin/clang" // User: Change the clang compiler location
+{
+	&
+	{
+		!Documentation Doxygen
+		Target.PlatformToolsetCompiler ""
+		!MalterlibDefaultToolset true
+	}
+}
+
+// Import all roots
+Import "*/*.MHeader"
