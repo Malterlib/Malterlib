@@ -280,3 +280,13 @@
         fetchRecurseSubmodules = on-demand
 	branch = master
 
+[submodule "Malterlib_Cloud"]
+	path = Malterlib/Cloud
+	url = ../Malterlib_Cloud
+	branch = master
+	fetchRecurseSubmodules = on-demand
+[submodule "Malterlib_Meteor"]
+	path = Malterlib/Meteor
+	url = ../Malterlib_Meteor
+	branch = master
+	fetchRecurseSubmodules = on-demand
