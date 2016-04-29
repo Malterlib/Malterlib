@@ -18,6 +18,11 @@ Property
 	{
 		!!MalterlibTestsMem_EnablePerfTests ""
 	}
+	
+	MalterlibMemoryManager_CheckOverrideMemoryLeaks true
+	{
+		!!MalterlibMemoryManager_CheckOverrideMemoryLeaks ""
+	}
 
 	DefaultOSXPlatform "10.7"
 }
