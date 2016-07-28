@@ -1,1 +1,3 @@
-Malterlib/Tools/Scripts/mib
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+"$DIR/Malterlib/Tools/Scripts/mib" "$@"
