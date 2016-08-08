@@ -32,7 +32,7 @@ Property
 	DefaultOSXPlatform "10.7"
 }
 
-Target.PlatformToolsetCompiler "/Development/Malterlib/Tools/llvm/unstable/build/make/bin/clang" // User: Change the clang compiler location
+Target.PlatformToolsetCompiler "/Development/Malterlib/llvm/unstable/build/make/bin/clang" // User: Change the clang compiler location
 {
 	&
 	{
