@@ -30,16 +30,8 @@ Property
 	}
 
 	DefaultOSXPlatform "10.7"
-}
-
-Target.PlatformToolsetCompiler "/Development/Malterlib/llvm/unstable/build/make/bin/clang" // User: Change the clang compiler location
-{
-	&
-	{
-		!Documentation Doxygen
-		Target.PlatformToolsetCompiler ""
-		!MalterlibDefaultToolset true
-	}
+	MalterlibOverrideMSVCVersion 190024210
+	MalterlibClangVersion 3.9
 }
 
 // Import all roots
