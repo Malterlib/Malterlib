@@ -32,6 +32,15 @@ Property
 	DefaultOSXPlatform "10.7"
 	MalterlibOverrideMSVCVersion 190024210
 	MalterlibClangVersion 3.9
+	
+	MalterlibThread_LinuxUseStaticThreadLocal true
+	{
+		!!MalterlibThread_LinuxUseStaticThreadLocal ""
+	}
+	Malterlib_AssumeMalterlibHost true
+	{
+		!!Malterlib_AssumeMalterlibHost ""
+	}
 }
 
 // Import all roots
