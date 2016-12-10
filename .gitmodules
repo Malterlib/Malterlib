@@ -290,3 +290,13 @@
 	url = ../Malterlib_Meteor
 	branch = master
 	fetchRecurseSubmodules = on-demand
+[submodule "Malterlib_BuildSystem"]
+	fetchRecurseSubmodules = on-demand
+	path = Malterlib/BuildSystem
+	url = https://github.com/Malterlib/Malterlib_BuildSystem
+	branch = master
+[submodule "Malterlib_Perforce"]
+	path = Malterlib/Perforce
+	url = https://github.com/Malterlib/Malterlib_Perforce
+	branch = master
+	fetchRecurseSubmodules = on-demand
