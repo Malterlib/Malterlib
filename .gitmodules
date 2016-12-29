@@ -1,4 +1,4 @@
-[submodule "SDK"]
+﻿[submodule "SDK"]
         path = SDK
 	url = ../MalterlibSDK
         fetchRecurseSubmodules = on-demand
@@ -285,18 +285,45 @@
 	url = ../Malterlib_Cloud
 	branch = master
 	fetchRecurseSubmodules = on-demand
+
 [submodule "Malterlib_Meteor"]
 	path = Malterlib/Meteor
 	url = ../Malterlib_Meteor
 	branch = master
 	fetchRecurseSubmodules = on-demand
+
 [submodule "Malterlib_BuildSystem"]
 	fetchRecurseSubmodules = on-demand
 	path = Malterlib/BuildSystem
-	url = https://github.com/Malterlib/Malterlib_BuildSystem
+	url = ../Malterlib_BuildSystem
 	branch = master
+
 [submodule "Malterlib_Perforce"]
 	path = Malterlib/Perforce
-	url = https://github.com/Malterlib/Malterlib_Perforce
+	url = ../Malterlib_Perforce
+	branch = master
+	fetchRecurseSubmodules = on-demand
+
+[submodule "External_boringssl"]
+	path = External/boringssl
+	url = https://github.com/Malterlib/boringssl
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+
+[submodule "External_CMake"]
+	path = External/CMake
+	url = https://github.com/Malterlib/CMake
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+	
+[submodule "External_tinyxml2"]
+	path = External/tinyxml2
+	url = https://github.com/Malterlib/tinyxml2
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+
+[submodule "Malterlib_XML"]
+	path = Malterlib/XML
+	url = https://github.com/Malterlib/Malterlib_XML
 	branch = master
 	fetchRecurseSubmodules = on-demand
