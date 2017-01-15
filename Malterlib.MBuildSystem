@@ -31,7 +31,7 @@ Property
 
 	DefaultOSXPlatform "10.7"
 	MalterlibOverrideMSVCVersion 190024210
-	MalterlibClangVersion 3.9
+	MalterlibClangVersion 4.0
 	
 	MalterlibThread_LinuxUseStaticThreadLocal true
 	{
