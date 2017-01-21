@@ -327,3 +327,23 @@
 	url = https://github.com/Malterlib/Malterlib_XML
 	branch = master
 	fetchRecurseSubmodules = on-demand
+[submodule "External_libcxxabi"]
+	path = External/libcxxabi
+	url = https://github.com/Malterlib/libcxxabi.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_compiler-rt"]
+	path = External/compiler-rt
+	url = https://github.com/Malterlib/compiler-rt.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_libcxx"]
+	path = External/libcxx
+	url = https://github.com/Malterlib/libcxx.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_libunwind"]
+	path = External/libunwind
+	url = https://github.com/Malterlib/libunwind.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
