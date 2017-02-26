@@ -30,7 +30,10 @@ Property
 	}
 
 	DefaultOSXPlatform "10.7"
-	MalterlibOverrideMSVCVersion 190024210
+	MalterlibOverrideMSVCVersion 14.10.24930
+	{
+		!Generator VisualStudio2015
+	}
 	MalterlibClangVersion 4.0
 	
 	MalterlibThread_LinuxUseStaticThreadLocal true
