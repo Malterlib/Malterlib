@@ -30,7 +30,7 @@ Property
 	}
 
 	DefaultOSXPlatform "10.7"
-	MalterlibOverrideMSVCVersion 14.10.24930
+	MalterlibOverrideMSVCVersion 14.10.25017
 	{
 		!Generator VisualStudio2015
 	}
