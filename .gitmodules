@@ -347,3 +347,8 @@
 	url = https://github.com/Malterlib/libunwind.git
 	branch = malterlib
 	fetchRecurseSubmodules = on-demand
+[submodule "External_curl"]
+	path = External/curl
+	url = https://github.com/Malterlib/curl.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
