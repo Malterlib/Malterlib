@@ -8,6 +8,8 @@ Property
 	{
 		!!ProductCompany ""
 	}
+	
+	MalterlibMainMalterlibRepo true
 
 	MalterlibEnableInternalTests true
 	{
