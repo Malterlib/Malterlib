@@ -352,3 +352,13 @@
 	url = https://github.com/Malterlib/curl.git
 	branch = malterlib
 	fetchRecurseSubmodules = on-demand
+[submodule "External_nginx"]
+	path = External/nginx
+	url = https://github.com/Malterlib/nginx.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_pcre"]
+	path = External/pcre
+	url = https://github.com/Malterlib/pcre.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
