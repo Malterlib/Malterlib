@@ -36,7 +36,6 @@ Property
 	{
 		!Generator VisualStudio2015
 	}
-	MalterlibClangVersion 4.0
 	
 	MalterlibThread_LinuxUseStaticThreadLocal true
 	{
