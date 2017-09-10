@@ -362,3 +362,18 @@
 	url = https://github.com/Malterlib/pcre.git
 	branch = malterlib
 	fetchRecurseSubmodules = on-demand
+[submodule "External_libbson"]
+	path = External/libbson
+	url = https://github.com/Malterlib/libbson.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_mongo-c-driver"]
+	path = External/mongo-c-driver
+	url = https://github.com/Malterlib/mongo-c-driver.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_mongo-cxx-driver"]
+	path = External/mongo-cxx-driver
+	url = https://github.com/Malterlib/mongo-cxx-driver.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
