@@ -377,3 +377,18 @@
 	url = https://github.com/Malterlib/mongo-cxx-driver.git
 	branch = malterlib
 	fetchRecurseSubmodules = on-demand
+[submodule "External_zlib"]
+	path = External/zlib
+	url = https://github.com/Malterlib/zlib.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_miniz"]
+	path = External/miniz
+	url = https://github.com/Malterlib/miniz.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
+[submodule "External_elftoolchain"]
+	path = External/elftoolchain
+	url = https://github.com/Malterlib/elftoolchain.git
+	branch = malterlib
+	fetchRecurseSubmodules = on-demand
