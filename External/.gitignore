@@ -1,1 +1,17 @@
 /RepoLock.MRepoState
+/libunwind
+/libcxxabi
+/libcxx
+/compiler-rt
+/libbson
+/boringssl
+/curl
+/elftoolchain
+/zlib
+/miniz
+/CMake
+/mongo-c-driver
+/mongo-cxx-driver
+/nginx
+/tinyxml2
+/pcre

@@ -3,7 +3,7 @@
 
 Property
 {
-	ProductCompanyUniqueIdentifier "com.malterlib"
+	ProductCompanyUniqueIdentifier "org.malterlib"
 	ProductCompany "Malterlib"
 	{
 		!!ProductCompany ""
@@ -32,7 +32,6 @@ Property
 	}
 
 	DefaultOSXPlatform "10.7"
-	MalterlibOverrideMSVCVersion 14.11.25503
 	
 	MalterlibThread_LinuxUseStaticThreadLocal true
 	{
