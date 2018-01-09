@@ -41,7 +41,7 @@ Property
 		!!Malterlib_AssumeMalterlibHost ""
 	}
 
-	MalterlibModules "Tool;@(Property.MalterlibModules)"
+	MalterlibModules "BuildAutomation;Tool;@(Property.MalterlibModules)"
 }
 
 
