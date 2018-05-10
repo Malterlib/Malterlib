@@ -31,17 +31,19 @@ Property
 		!!MalterlibMemoryManager_CheckOverrideMemoryLeaks ""
 	}
 
-	DefaultOSXPlatform "10.7"
-	
 	MalterlibThread_LinuxUseStaticThreadLocal true
 	{
 		!!MalterlibThread_LinuxUseStaticThreadLocal ""
 	}
+
 	Malterlib_AssumeMalterlibHost true
 	{
 		!!Malterlib_AssumeMalterlibHost ""
 	}
+
+	MalterlibModules "Tool;@(Property.MalterlibModules)"
 }
+
 
 // Import all roots
 Import "Malterlib/Core/Malterlib.MHeader"
