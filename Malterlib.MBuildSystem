@@ -21,7 +21,7 @@ Property
 		!!MalterlibEnableInternalWorkspaces ""
 	}
 
-	MalterlibTestsMem_EnablePerfTests true // User: Enable performance memory tests (default true)
+	MalterlibTestsMem_EnablePerfTests true // User(Tests)=false: Enable performance memory tests (default true)
 	{
 		!!MalterlibTestsMem_EnablePerfTests ""
 	}
