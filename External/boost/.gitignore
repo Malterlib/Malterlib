@@ -39,3 +39,15 @@
 /numeric_conversion
 /optional
 /container_hash
+/winapi
+/asio
+/assign
+/chrono
+/exception
+/date_time
+/io
+/logic
+/ratio
+/tuple
+/system
+/thread
