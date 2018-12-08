@@ -47,3 +47,45 @@ Property
 
 // Import all roots
 Import "Malterlib/Core/Malterlib.MHeader"
+
+%Target AllFiles
+{
+	Target
+	{
+		Type "Tool"
+		BaseFileName "AllFiles"
+		Name "AllFiles"
+	}
+	Property
+	{
+		ExcludeFiles "*/.meteor/local;*/.DS_Store;*/.build.*;*/.git;*/node_modules;*/.babel-cache;*.ts-build@(ExcludeFiles)"
+		ExcludeFiles "@('BuildSystem'->MakeAbsolute());@(ExcludeFiles)"
+		ExcludeFiles "@('External/meteor/dev_bundle'->MakeAbsolute());@(ExcludeFiles)"
+		ExcludeFiles "@('External/meteor/.meteor'->MakeAbsolute());@(ExcludeFiles)"
+		ExcludeFiles "@('Binaries'->MakeAbsolute());@(ExcludeFiles)"
+		ExcludeFiles "*/vendor/bundle;@(ExcludeFiles)"
+		ExcludeFiles ">;@(ExcludeFiles)" // Don't follow links
+	}
+
+	%File "^*"
+}
+
+Property
+{
+	MalterlibEnableAllFilesWorkspace false // User(Build System)=true: Enable all files workspace
+	{
+		!!MalterlibEnableAllFilesWorkspace ""
+	}
+}
+
+%Workspace "AllFiles"
+{
+	&
+	{
+		Platform "@(HostPlatform)"
+		Configuration Debug
+		MalterlibEnableAllFilesWorkspace true
+	}
+	Property.EnableTestConfigs false
+	%Target AllFiles
+}
