@@ -59,7 +59,7 @@ Test_Linux:
   tags:
     - Linux
   dependencies:
-    - BuildNative
+    - Build_Linux
   before_script:
     - echo Skipping git sync
   script:
