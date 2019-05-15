@@ -44,7 +44,7 @@ Build_Linux:
     - rm -rf Deploy
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
-    - ./mib prebuild Favro Tests
+    - ./mib prebuild Malterlib Tests
     - ./mib build Tests Linux2.6 x64 Debug
     - mkdir -p Artifacts
     - GZIP=-1 tar -czf Artifacts/Deploy.tar.gz Deploy
