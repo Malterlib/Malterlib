@@ -1,0 +1,80 @@
+stages:
+  - build
+  - test
+  - clean
+
+variables:
+  GIT_STRATEGY: none
+  MalterlibDeployRoot: "${CI_PROJECT_DIR}/Deploy"
+  MalterlibRepositoryHardReset: "true"
+  MalterlibPreBuildNoClean: "true"
+  MalterlibDisableBuildSystemGeneration: "true"
+  EnablePlatform_Linux2_6: "true"
+  MalterlibEnableInternalTests: "true"
+  RunningCI: "true"
+
+before_script:
+  - 'set -e'
+  - 'if [[ ! -d "${CI_PROJECT_DIR}/.git" ]]; then'
+  - '  echo "Initializing: ${CI_PROJECT_DIR}"'
+  - '  mkdir -p "${CI_PROJECT_DIR}"'
+  - '  pushd "${CI_PROJECT_DIR}" > /dev/null'
+  - '  git init .'
+  - '  popd > /dev/null'
+  - 'fi'
+  - 'pushd "${CI_PROJECT_DIR}" > /dev/null'
+  - 'echo "Fetching in \"${CI_PROJECT_DIR}\""'
+  - 'export GIT_TERMINAL_PROMPT=0'
+  - 'if ! git remote add origin "${CI_REPOSITORY_URL}" 2> /dev/null; then'
+  - '  git remote set-url origin "${CI_REPOSITORY_URL}"'
+  - 'fi'
+  - 'git fetch origin --prune'
+  - 'popd > /dev/null'
+  - 'git checkout -f -B "$CI_COMMIT_REF_NAME" "$CI_COMMIT_SHA"'
+  - 'git clean -fd'
+
+Build_Linux:
+  stage: build
+  tags:
+    - OSX
+    - Build
+  script:
+    - set -e
+    - ./mib update_repos
+    - rm -rf Deploy
+    - mkdir -p BuildSystem/Default
+    - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+    - ./mib prebuild Favro Tests
+    - ./mib build Tests Linux2.6 x64 Debug
+    - mkdir -p Artifacts
+    - GZIP=-1 tar -czf Artifacts/Deploy.tar.gz Deploy
+  artifacts:
+    name: "Tests"
+    expire_in: 1 day
+    paths:
+      - Artifacts/Deploy.tar.gz
+
+Test_Linux:
+  stage: test
+  tags:
+    - Linux
+  dependencies:
+    - BuildNative
+  before_script:
+    - echo Skipping git sync
+  script:
+    - set -e
+    - rm -rf Deploy
+    - tar -xf Artifacts/Deploy.tar.gz
+    - pushd Deploy/Tests_Linux_x64
+    - ./RunAllTests --quiet
+    - popd
+
+Clean:
+  stage: clean
+  when: manual
+  tags:
+    - OSX
+    - Build
+  script:
+    - ./mib postbuild Tests
