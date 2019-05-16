@@ -1,6 +1,8 @@
 stages:
   - build
   - test
+  - build_release
+  - test_release
   - clean
 
 variables:
@@ -54,6 +56,27 @@ Build_Linux:
     paths:
       - Artifacts/Deploy.tar.gz
 
+Build_Linux_Release:
+  stage: build_release
+  tags:
+    - OSX
+    - Build
+  script:
+    - set -e
+    - ./mib update_repos
+    - rm -rf Deploy
+    - mkdir -p BuildSystem/Default
+    - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+    - ./mib prebuild Malterlib Tests
+    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - mkdir -p Artifacts
+    - GZIP=-1 tar -czf Artifacts/Deploy_Release.tar.gz Deploy
+  artifacts:
+    name: "Tests Release"
+    expire_in: 1 day
+    paths:
+      - Artifacts/Deploy_Release.tar.gz
+
 Test_Linux:
   stage: test
   tags:
@@ -66,6 +89,22 @@ Test_Linux:
     - set -e
     - rm -rf Deploy
     - tar -xf Artifacts/Deploy.tar.gz
+    - pushd Deploy/Tests_Linux_x64
+    - ./RunAllTests --quiet
+    - popd
+
+Test_Linux_Release:
+  stage: test_release
+  tags:
+    - Linux
+  dependencies:
+    - Build_Linux_Release
+  before_script:
+    - echo Skipping git sync
+  script:
+    - set -e
+    - rm -rf Deploy
+    - tar -xf Artifacts/Deploy_Release.tar.gz
     - pushd Deploy/Tests_Linux_x64
     - ./RunAllTests --quiet
     - popd
