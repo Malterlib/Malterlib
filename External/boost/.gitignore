@@ -51,3 +51,7 @@
 /tuple
 /system
 /thread
+/beast
+/mp11
+/endian
+/align
