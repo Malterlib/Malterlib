@@ -42,6 +42,11 @@ Property
 	}
 
 	MalterlibModules "Tool;@(Property.MalterlibModules)"
+
+	MalterlibEnableThirdPartyComparisonTests true
+	{
+		!!MalterlibEnableThirdPartyComparisonTests ""
+	}
 }
 
 
