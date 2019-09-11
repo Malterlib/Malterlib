@@ -1,0 +1,130 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  build_windows:
+    name: Build Windows ${{ matrix.architecture }} ${{ matrix.configuration }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [x86, x64]
+        configuration: [Debug, Release]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      env:
+        GITHUB_USER_TOKEN: ${{ secrets.GITHUB_USER_TOKEN }}
+        GITHUB_USER: ${{ secrets.GITHUB_USER }}
+      shell: bash
+      run: |
+        export MalterlibRepositoryHardReset="true"
+        export MalterlibPreBuildNoClean="true"
+        export MalterlibDisableBuildSystemGeneration="true"
+        export MalterlibImportUpdateCache="false"
+        export MalterlibDebugSymbolsEnable="false"
+        export MalterlibEnableLinkTimeCodeGeneration="false"
+        export Malterlib_UseUserSettings="false"
+
+        mkdir -p /c/BuildSystem/CompiledFiles
+        mkdir -p BuildSystem/Default
+        mkdir -p Deploy
+
+        env
+
+        df -h
+
+        MSYS_NO_PATHCONV=1 compact /C /S /I /Q /EXE || true
+        MSYS_NO_PATHCONV=1 compact /C /S /I /Q || true
+
+        df -h
+
+        pushd /c/BuildSystem
+
+        MSYS_NO_PATHCONV=1 compact /C /S /I /Q /EXE || true
+        MSYS_NO_PATHCONV=1 compact /C /S /I /Q || true
+
+        popd
+
+        df -h
+
+        LocalDir="$PWD"
+        GIT_TERMINAL_PROMPT=0
+        git config credential.helper store
+        git config --global credential.helper store
+        git config --system credential.helper store
+        git config core.symlinks true
+        git config --global core.symlinks true
+        git config --system core.symlinks true
+        printf "protocol=https\nhost=github.com\nusername=$GITHUB_USER\npassword=$GITHUB_USER_TOKEN\n" | git credential-store store
+        ./mib setup_only
+
+        source Malterlib/Core/Scripts/Detect.sh
+        export MalterlibDependenciesDirectory="`MalterlibConvertPath \"/c/BuildSystem/CompiledFiles/Dependencies\"`"
+        export MalterlibCompiledFiles="`MalterlibConvertPath \"/c/BuildSystem/CompiledFiles/\"`"
+
+        ./mib update_repos
+
+        df -h
+
+        MalterlibDeployRoot="`MalterlibConvertPath \"$PWD/Deploy\"`"
+        echo MalterlibDeployRoot: $MalterlibDeployRoot
+        echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+        ./mib prebuild Malterlib Tests
+
+        df -h
+
+        BuildConfig="${{ matrix.configuration }}"
+        if [[ "$BuildConfig" != "Debug" ]]; then
+          BuildConfig="$BuildConfig (Tests)"
+        fi
+
+        if ! ./mib build Tests Windows ${{ matrix.architecture }} "$BuildConfig" ; then
+          echo Build failed
+          df -h
+          exit 1
+        fi
+
+        df -h
+
+        pwd
+
+        ls -laF Deploy || true
+        DeployDirectory=`find Deploy -maxdepth 1 -mindepth 1 -type d | head -n 1`
+        echo DeployDirectory: $DeployDirectory
+        ls -laF "$DeployDirectory"
+
+        mkdir Artifacts
+        echo tar -cf Artifacts/Deploy.tar $DeployDirectory
+        tar -cf Artifacts/Deploy.tar $DeployDirectory
+
+        df -h
+
+    - uses: actions/upload-artifact@master
+      with:
+        name: Tests Windows ${{ matrix.architecture }} ${{ matrix.configuration }}
+        path: Artifacts
+
+  test_windows:
+    name: Test ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
+    runs-on: ${{ matrix.os }}
+    needs: [build_windows]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        architecture: [x86, x64]
+        configuration: [Debug, Release]
+    steps:
+    - uses: actions/download-artifact@master
+      with:
+        name: Tests Windows ${{ matrix.architecture }} ${{ matrix.configuration }}
+    - name: Run tests
+      shell: bash
+      run: |
+        pwd
+        tar -xf Tests\ */Deploy.tar
+        pushd Deploy/*
+        ./RunAllTests --quiet --no-parallel
+        popd
