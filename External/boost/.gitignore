@@ -56,3 +56,5 @@
 /endian
 /align
 /atomic
+/lockfree
+/parameter
