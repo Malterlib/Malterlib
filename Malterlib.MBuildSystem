@@ -53,7 +53,7 @@ Property
 // Import all roots
 Import "Malterlib/Core/Malterlib.MHeader"
 
-%Target AllFiles
+%Target "AllFiles"
 {
 	Target
 	{
@@ -88,9 +88,9 @@ Property
 	&
 	{
 		Platform "@(HostPlatform)"
-		Configuration Debug
+		Configuration "Debug"
 		MalterlibEnableAllFilesWorkspace true
 	}
 	Property.EnableTestConfigs false
-	%Target AllFiles
+	%Target "AllFiles"
 }
