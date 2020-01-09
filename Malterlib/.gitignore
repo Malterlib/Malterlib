@@ -39,7 +39,6 @@
 /String
 /Meta
 /Mongo
-/Meteor
 /Stream
 /Network
 /Perforce
@@ -51,3 +50,4 @@
 /Security
 /STL
 /Tool
+/WebApp
