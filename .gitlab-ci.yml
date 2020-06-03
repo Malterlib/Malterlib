@@ -3,7 +3,6 @@ stages:
   - test
   - build_release
   - test_release
-  - clean
 
 variables:
   GIT_STRATEGY: none
@@ -110,7 +109,7 @@ Test_Linux_Release:
     - popd
 
 Clean:
-  stage: clean
+  stage: build
   when: manual
   tags:
     - OSX
