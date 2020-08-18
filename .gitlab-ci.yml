@@ -1,8 +1,6 @@
 stages:
   - build
   - test
-  - build_release
-  - test_release
 
 variables:
   GIT_STRATEGY: none
@@ -10,6 +8,10 @@ variables:
   MalterlibRepositoryHardReset: "true"
   MalterlibPreBuildNoClean: "true"
   MalterlibDisableBuildSystemGeneration: "true"
+  MalterlibEnableLinkTimeCodeGeneration: "false"
+  MalterlibBuildLogFile: "Artifacts/Build.log"
+  ASAN_OPTIONS: "detect_leaks=0"
+  TSAN_OPTIONS: "second_deadlock_stack=1"
   EnablePlatform_Linux2_6: "true"
   MalterlibEnableInternalTests: "true"
   RunningCI: "true"
@@ -47,16 +49,39 @@ Build_Linux:
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
     - ./mib build Tests Linux2.6 x64 Debug
-    - mkdir -p Artifacts
     - GZIP=-1 tar -czf Artifacts/Deploy.tar.gz Deploy
   artifacts:
+    when: always
     name: "Tests"
     expire_in: 1 day
     paths:
       - Artifacts/Deploy.tar.gz
+      - Artifacts/Build.log
+
+Build_Linux_ReleaseTesting:
+  stage: build
+  tags:
+    - OSX
+    - Build
+  script:
+    - set -e
+    - ./mib update_repos
+    - rm -rf Deploy
+    - mkdir -p BuildSystem/Default
+    - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+    - ./mib prebuild Malterlib Tests
+    - ./mib build Tests Linux2.6 x64 "Release Testing (Tests)"
+    - GZIP=-1 tar -czf Artifacts/Deploy_ReleaseTesting.tar.gz Deploy
+  artifacts:
+    when: always
+    name: "Tests Release Testing"
+    expire_in: 1 day
+    paths:
+      - Artifacts/Deploy_ReleaseTesting.tar.gz
+      - Artifacts/Build.log
 
 Build_Linux_Release:
-  stage: build_release
+  stage: build
   tags:
     - OSX
     - Build
@@ -68,18 +93,92 @@ Build_Linux_Release:
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
     - ./mib build Tests Linux2.6 x64 "Release (Tests)"
-    - mkdir -p Artifacts
     - GZIP=-1 tar -czf Artifacts/Deploy_Release.tar.gz Deploy
   artifacts:
+    when: always
     name: "Tests Release"
     expire_in: 1 day
     paths:
       - Artifacts/Deploy_Release.tar.gz
+      - Artifacts/Build.log
+
+Build_Linux_Release_TSan:
+  stage: build
+  tags:
+    - OSX
+    - Build
+  variables:
+    MalterlibSupportSanitizerEnable_Thread: "true"
+  script:
+    - set -e
+    - ./mib update_repos
+    - rm -rf Deploy
+    - mkdir -p BuildSystem/Default
+    - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+    - ./mib prebuild Malterlib Tests
+    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - GZIP=-1 tar -czf Artifacts/Deploy_Release_TSan.tar.gz Deploy
+  artifacts:
+    when: always
+    name: "Tests Release (TSan)"
+    expire_in: 1 day
+    paths:
+      - Artifacts/Deploy_Release_TSan.tar.gz
+      - Artifacts/Build.log
+
+Build_Linux_Release_ASan:
+  stage: build
+  tags:
+    - OSX
+    - Build
+  variables:
+    MalterlibSupportSanitizerEnable_Address: "true"
+  script:
+    - set -e
+    - ./mib update_repos
+    - rm -rf Deploy
+    - mkdir -p BuildSystem/Default
+    - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+    - ./mib prebuild Malterlib Tests
+    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - GZIP=-1 tar -czf Artifacts/Deploy_Release_ASan.tar.gz Deploy
+  artifacts:
+    when: always
+    name: "Tests Release (ASan)"
+    expire_in: 1 day
+    paths:
+      - Artifacts/Deploy_Release_ASan.tar.gz
+      - Artifacts/Build.log
+
+Build_Linux_Release_UBSan:
+  stage: build
+  tags:
+    - OSX
+    - Build
+  variables:
+    MalterlibSupportSanitizerEnable_UndefinedBehavior: "true"
+  script:
+    - set -e
+    - ./mib update_repos
+    - rm -rf Deploy
+    - mkdir -p BuildSystem/Default
+    - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+    - ./mib prebuild Malterlib Tests
+    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - GZIP=-1 tar -czf Artifacts/Deploy_Release_UBSan.tar.gz Deploy
+  artifacts:
+    when: always
+    name: "Tests Release (UBSan)"
+    expire_in: 1 day
+    paths:
+      - Artifacts/Deploy_Release_UBSan.tar.gz
+      - Artifacts/Build.log
 
 Test_Linux:
   stage: test
+  needs: ["Build_Linux"]
   tags:
-    - Linux
+    - LinuxHighMem
   dependencies:
     - Build_Linux
   before_script:
@@ -89,13 +188,31 @@ Test_Linux:
     - rm -rf Deploy
     - tar -xf Artifacts/Deploy.tar.gz
     - pushd Deploy/Tests_Linux_x64
-    - ./RunAllTests --quiet
+    - ./RunAllTests --no-quiet
+    - popd
+
+Test_Linux_ReleaseTesting:
+  stage: test
+  needs: ["Build_Linux_ReleaseTesting"]
+  tags:
+    - LinuxHighMem
+  dependencies:
+    - Build_Linux_ReleaseTesting
+  before_script:
+    - echo Skipping git sync
+  script:
+    - set -e
+    - rm -rf Deploy
+    - tar -xf Artifacts/Deploy_ReleaseTesting.tar.gz
+    - pushd Deploy/Tests_Linux_x64
+    - ./RunAllTests --no-quiet
     - popd
 
 Test_Linux_Release:
-  stage: test_release
+  stage: test
+  needs: ["Build_Linux_Release"]
   tags:
-    - Linux
+    - LinuxHighMem
   dependencies:
     - Build_Linux_Release
   before_script:
@@ -106,6 +223,57 @@ Test_Linux_Release:
     - tar -xf Artifacts/Deploy_Release.tar.gz
     - pushd Deploy/Tests_Linux_x64
     - ./RunAllTests --quiet
+    - popd
+
+Test_Linux_Release_TSan:
+  stage: test
+  needs: ["Build_Linux_Release_TSan"]
+  tags:
+    - LinuxHighMem
+  dependencies:
+    - Build_Linux_Release_TSan
+  before_script:
+    - echo Skipping git sync
+  script:
+    - set -e
+    - rm -rf Deploy
+    - tar -xf Artifacts/Deploy_Release_TSan.tar.gz
+    - pushd Deploy/Tests_Linux_x64
+    - ./RunAllTests --no-quiet --no-parallel
+    - popd
+
+Test_Linux_Release_ASan:
+  stage: test
+  needs: ["Build_Linux_Release_ASan"]
+  tags:
+    - LinuxHighMem
+  dependencies:
+    - Build_Linux_Release_ASan
+  before_script:
+    - echo Skipping git sync
+  script:
+    - set -e
+    - rm -rf Deploy
+    - tar -xf Artifacts/Deploy_Release_ASan.tar.gz
+    - pushd Deploy/Tests_Linux_x64
+    - ./RunAllTests --no-quiet --no-parallel
+    - popd
+
+Test_Linux_Release_UBSan:
+  stage: test
+  needs: ["Build_Linux_Release_UBSan"]
+  tags:
+    - LinuxHighMem
+  dependencies:
+    - Build_Linux_Release_UBSan
+  before_script:
+    - echo Skipping git sync
+  script:
+    - set -e
+    - rm -rf Deploy
+    - tar -xf Artifacts/Deploy_Release_UBSan.tar.gz
+    - pushd Deploy/Tests_Linux_x64
+    - ./RunAllTests --no-quiet --no-parallel
     - popd
 
 Clean:

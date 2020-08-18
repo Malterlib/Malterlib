@@ -21,3 +21,6 @@
 /mimalloc
 /gperftools
 /llvm-project
+/mongo
+/mongo-tools
+/node
