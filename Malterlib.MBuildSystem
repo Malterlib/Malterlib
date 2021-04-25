@@ -1,57 +1,53 @@
 // Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
+// Import all roots
+Import "Malterlib/Core/Malterlib.MHeader"
+
 Property
 {
 	ProductCompanyUniqueIdentifier "org.malterlib"
 	ProductCompany "Malterlib"
 	{
-		!!ProductCompany ""
+		!!ProductCompany undefined
 	}
-	
+
 	MalterlibMainMalterlibRepo true
 
 	MalterlibEnableInternalTests true
 	{
-		!!MalterlibEnableInternalTests ""
+		!!MalterlibEnableInternalTests undefined
 	}
 
 	MalterlibEnableInternalWorkspaces true
 	{
-		!!MalterlibEnableInternalWorkspaces ""
+		!!MalterlibEnableInternalWorkspaces undefined
 	}
 
-	MalterlibTestsMem_EnablePerfTests true // User(Tests)=false: Enable performance memory tests (default true)
-	{
-		!!MalterlibTestsMem_EnablePerfTests ""
-	}
-	
+	MalterlibTestsMem_EnablePerfTests true
+
 	MalterlibMemoryManager_CheckOverrideMemoryLeaks true
 	{
-		!!MalterlibMemoryManager_CheckOverrideMemoryLeaks ""
+		!!MalterlibMemoryManager_CheckOverrideMemoryLeaks undefined
 	}
 
 	MalterlibThread_LinuxUseStaticThreadLocal true
 	{
-		!!MalterlibThread_LinuxUseStaticThreadLocal ""
+		!!MalterlibThread_LinuxUseStaticThreadLocal undefined
 	}
 
 	Malterlib_AssumeMalterlibHost true
 	{
-		!!Malterlib_AssumeMalterlibHost ""
+		!!Malterlib_AssumeMalterlibHost undefined
 	}
 
-	MalterlibModules "Tool;@(Property.MalterlibModules)"
+	MalterlibModules =+ "Tool"
 
 	MalterlibEnableThirdPartyComparisonTests true
 	{
-		!!MalterlibEnableThirdPartyComparisonTests ""
+		!!MalterlibEnableThirdPartyComparisonTests undefined
 	}
 }
-
-
-// Import all roots
-Import "Malterlib/Core/Malterlib.MHeader"
 
 %Target "AllFiles"
 {
@@ -63,13 +59,12 @@ Import "Malterlib/Core/Malterlib.MHeader"
 	}
 	Property
 	{
-		ExcludeFiles "*/.meteor/local;*/.DS_Store;*/.build.*;*/.git;*/node_modules;*/.babel-cache;*.ts-build@(ExcludeFiles)"
-		ExcludeFiles "@('BuildSystem'->MakeAbsolute());@(ExcludeFiles)"
-		ExcludeFiles "@('External/meteor/dev_bundle'->MakeAbsolute());@(ExcludeFiles)"
-		ExcludeFiles "@('External/meteor/.meteor'->MakeAbsolute());@(ExcludeFiles)"
-		ExcludeFiles "@('Binaries'->MakeAbsolute());@(ExcludeFiles)"
-		ExcludeFiles "*/vendor/bundle;@(ExcludeFiles)"
-		ExcludeFiles ">;@(ExcludeFiles)" // Don't follow links
+		ExcludeFiles += ["*/.meteor/local", "*/.DS_Store", "*/.build.*", "*/.git", "*/node_modules", "*/.babel-cache", "*.ts-build", "*/vendor/bundle"]
+		ExcludeFiles += ["BuildSystem"->MakeAbsolute()]
+		ExcludeFiles += ["External/meteor/dev_bundle"->MakeAbsolute()]
+		ExcludeFiles += ["External/meteor/.meteor"->MakeAbsolute()]
+		ExcludeFiles += ["Binaries"->MakeAbsolute()]
+		ExcludeFiles += [">"] // Don't follow links
 	}
 
 	%File "^*"
@@ -77,17 +72,14 @@ Import "Malterlib/Core/Malterlib.MHeader"
 
 Property
 {
-	MalterlibEnableAllFilesWorkspace false // User(Build System)=true: Enable all files workspace
-	{
-		!!MalterlibEnableAllFilesWorkspace ""
-	}
+	MalterlibEnableAllFilesWorkspace define bool = false // User(Build System)=true: Enable all files workspace
 }
 
 %Workspace "AllFiles"
 {
 	&
 	{
-		Platform "@(HostPlatform)"
+		Platform HostPlatform
 		Configuration "Debug"
 		MalterlibEnableAllFilesWorkspace true
 	}
