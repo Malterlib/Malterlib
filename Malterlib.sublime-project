@@ -27,7 +27,7 @@
 			],
 			"file_include_patterns":
 			[
-				"*/UserSettingGlobal.MSettings",
+				"*/UserSettingGlobalV2.MSettings",
 			],
 		}
 	],
