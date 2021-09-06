@@ -47,6 +47,13 @@ Property
 	{
 		!!MalterlibEnableThirdPartyComparisonTests undefined
 	}
+
+	MalterlibVerboseCMakeHash define bool = false
+}
+
+Import.CMake_VerboseHash true
+{
+	!!MalterlibVerboseCMakeHash true
 }
 
 %Target "AllFiles"

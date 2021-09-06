@@ -9,6 +9,7 @@ variables:
   MalterlibPreBuildNoClean: "true"
   MalterlibDisableBuildSystemGeneration: "true"
   MalterlibEnableLinkTimeCodeGeneration: "false"
+  MalterlibImportUpdateCache: "true"
   MalterlibBuildLogFile: "Artifacts/Build.log"
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
