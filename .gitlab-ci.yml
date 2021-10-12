@@ -14,6 +14,9 @@ variables:
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
   EnablePlatform_Linux2_6: "true"
+  EnablePlatform_OSX10_7: "false"
+  MalterlibEnableSanitizerReleaseConfigs: "true"
+  MalterlibEnablePrefTestConfig: "false"
   MalterlibEnableInternalTests: "true"
   RunningCI: "true"
 
@@ -117,7 +120,7 @@ Build_Linux_Release_TSan:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - ./mib build Tests Linux2.6 x64 "Release (TSan Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_Release_TSan.tar.gz Deploy
   artifacts:
     when: always
@@ -141,7 +144,7 @@ Build_Linux_Release_ASan:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - ./mib build Tests Linux2.6 x64 "Release (ASan Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_Release_ASan.tar.gz Deploy
   artifacts:
     when: always
@@ -165,7 +168,7 @@ Build_Linux_Release_UBSan:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - ./mib build Tests Linux2.6 x64 "Release (UBSan Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_Release_UBSan.tar.gz Deploy
   artifacts:
     when: always
