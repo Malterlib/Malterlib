@@ -27,3 +27,6 @@
 /zstd
 /qt
 /breakpad
+/pcre2
+/mariadb-connector-c
+/mhook
