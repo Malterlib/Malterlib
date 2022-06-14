@@ -13,8 +13,8 @@ variables:
   MalterlibBuildLogFile: "Artifacts/Build.log"
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
-  EnablePlatform_Linux2_6: "true"
-  EnablePlatform_OSX10_7: "false"
+  EnablePlatform_Linux: "true"
+  EnablePlatform_macOS: "false"
   MalterlibEnableSanitizerReleaseConfigs: "true"
   MalterlibEnablePrefTestConfig: "false"
   MalterlibEnableInternalTests: "true"
@@ -43,7 +43,7 @@ before_script:
 Build_Linux:
   stage: build
   tags:
-    - OSX
+    - macOS
     - Build
   script:
     - set -e
@@ -52,7 +52,7 @@ Build_Linux:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 Debug
+    - ./mib build Tests Linux x64 Debug
     - GZIP=-1 tar -czf Artifacts/Deploy.tar.gz Deploy
   artifacts:
     when: always
@@ -65,7 +65,7 @@ Build_Linux:
 Build_Linux_ReleaseTesting:
   stage: build
   tags:
-    - OSX
+    - macOS
     - Build
   script:
     - set -e
@@ -74,7 +74,7 @@ Build_Linux_ReleaseTesting:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release Testing (Tests)"
+    - ./mib build Tests Linux x64 "Release Testing (Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_ReleaseTesting.tar.gz Deploy
   artifacts:
     when: always
@@ -87,7 +87,7 @@ Build_Linux_ReleaseTesting:
 Build_Linux_Release:
   stage: build
   tags:
-    - OSX
+    - macOS
     - Build
   script:
     - set -e
@@ -96,7 +96,7 @@ Build_Linux_Release:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release (Tests)"
+    - ./mib build Tests Linux x64 "Release (Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_Release.tar.gz Deploy
   artifacts:
     when: always
@@ -109,7 +109,7 @@ Build_Linux_Release:
 Build_Linux_Release_TSan:
   stage: build
   tags:
-    - OSX
+    - macOS
     - Build
   variables:
     MalterlibSupportSanitizerEnable_Thread: "true"
@@ -120,7 +120,7 @@ Build_Linux_Release_TSan:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release (TSan Tests)"
+    - ./mib build Tests Linux x64 "Release (TSan Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_Release_TSan.tar.gz Deploy
   artifacts:
     when: always
@@ -133,7 +133,7 @@ Build_Linux_Release_TSan:
 Build_Linux_Release_ASan:
   stage: build
   tags:
-    - OSX
+    - macOS
     - Build
   variables:
     MalterlibSupportSanitizerEnable_Address: "true"
@@ -144,7 +144,7 @@ Build_Linux_Release_ASan:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release (ASan Tests)"
+    - ./mib build Tests Linux x64 "Release (ASan Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_Release_ASan.tar.gz Deploy
   artifacts:
     when: always
@@ -157,7 +157,7 @@ Build_Linux_Release_ASan:
 Build_Linux_Release_UBSan:
   stage: build
   tags:
-    - OSX
+    - macOS
     - Build
   variables:
     MalterlibSupportSanitizerEnable_UndefinedBehavior: "true"
@@ -168,7 +168,7 @@ Build_Linux_Release_UBSan:
     - mkdir -p BuildSystem/Default
     - echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
     - ./mib prebuild Malterlib Tests
-    - ./mib build Tests Linux2.6 x64 "Release (UBSan Tests)"
+    - ./mib build Tests Linux x64 "Release (UBSan Tests)"
     - GZIP=-1 tar -czf Artifacts/Deploy_Release_UBSan.tar.gz Deploy
   artifacts:
     when: always
@@ -284,7 +284,7 @@ Clean:
   stage: build
   when: manual
   tags:
-    - OSX
+    - macOS
     - Build
   script:
     - ./mib postbuild Tests

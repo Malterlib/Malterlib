@@ -26,8 +26,8 @@ if [[ "$BuildPlatform" == "Windows" ]]; then
 	export EnableArchitecture_x64="false"
 	export EnableArchitecture_${BuildArchitecture}="true"
 else
-	export EnablePlatform_Linux2_6="true"
-	export EnablePlatform_OSX10_7="true"
+	export EnablePlatform_Linux="true"
+	export EnablePlatform_macOS="true"
 	export EnableArchitecture_x64="true"
 	export EnableArchitecture_x86="false"
 	export EnableArchitecture_arm64="false"

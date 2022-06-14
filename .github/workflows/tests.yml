@@ -29,6 +29,7 @@ jobs:
   build_windows:
     name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
     runs-on: self-hosted-windows-11-build
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -98,10 +99,11 @@ jobs:
   build_mac:
     name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
     runs-on: self-hosted-mac-12-x64
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        platform: [OSX10.7]
+        platform: [macOS]
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
     env:
@@ -128,10 +130,11 @@ jobs:
   build_linux:
     name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
     runs-on: self-hosted-mac-12-x64
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        platform: [Linux2.6]
+        platform: [Linux]
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
     env:
@@ -159,10 +162,11 @@ jobs:
     name: Test ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
     runs-on: ${{ matrix.os }}
     needs: [build_mac]
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        platform: [OSX10.7]
+        platform: [macOS]
         os: [self-hosted-macos-10.15, self-hosted-macos-11, self-hosted-macos-12]
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
@@ -200,10 +204,11 @@ jobs:
     name: Test ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
     runs-on: ${{ matrix.os }}
     needs: [build_linux]
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        platform: [Linux2.6]
+        platform: [Linux]
         os: [ubuntu-20.04]
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
@@ -265,6 +270,7 @@ jobs:
     name: Test ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
     runs-on: ${{ matrix.os }}
     needs: [build_windows]
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:

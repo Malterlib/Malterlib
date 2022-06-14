@@ -42,7 +42,7 @@
     [
         {
             "name": "Build Tests",
-            "cmd": ["bash", "-c", "cd '$project_path' && ./mib build Tests OSX10.7 x64 Debug"],
+            "cmd": ["bash", "-c", "cd '$project_path' && ./mib build Tests macOS x64 Debug"],
             "target": "ansi_color_build",
             "syntax": "Packages/ANSIescape/ANSI.tmLanguage"
         }

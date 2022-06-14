@@ -31,3 +31,9 @@
 /mariadb-connector-c
 /mhook
 /p4source
+/daw_json_link
+/rapidjson
+/simdjson
+/json
+/header_libraries
+/utf_range
