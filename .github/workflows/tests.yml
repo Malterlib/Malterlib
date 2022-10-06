@@ -13,12 +13,14 @@ env:
   MalterlibPreBuildNoClean: "true"
   MalterlibDisableBuildSystemGeneration: "true"
   MalterlibEnableLinkTimeCodeGeneration: "false"
-  MalterlibDebugSymbolsEnable: "false"
   MalterlibImportUpdateCache: "false"
   MalterlibBuildLogFile: "Artifacts/Build.log"
   MalterlibEnableSanitizerReleaseConfigs: "true"
   MalterlibEnablePrefTestConfig: "false"
   MalterlibEnableInternalTests: "true"
+  MalterlibDebugSymbolsEnable: "false"
+  MalterlibDeploySymbols: "false"
+  MalterlibSupportCrashDumps: "false"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
@@ -94,7 +96,14 @@ jobs:
       if: (failure() || success())
       with:
         name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: Artifacts
+        path: |
+          Artifacts
+    - uses: actions/upload-artifact@v2
+      if: (success() && (env.MalterlibDeploySymbols == 'true'))
+      with:
+        name: Symbols ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
+        path: |
+          Symbols
 
   build_mac:
     name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
@@ -286,12 +295,22 @@ jobs:
     - name: Run tests
       shell: bash
       run: |
+        set -ex
         pwd
         echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
         rm -rf Deploy
         mkdir -p Deploy
         cd Deploy
+        export MalterlibCrashDumpDir=`cygpath -m "$PWD/CrashDumps"`
+        mkdir -p "$PWD/CrashDumps"
         tar -xf ../Artifacts/Deploy.tar.zst
         cd Tests*
         ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
         exit 0
+    - uses: actions/upload-artifact@v3
+      if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
+      with:
+        name: Crash Dumps ${{ matrix.platform }} ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
+        path: |
+          Deploy/CrashDumps/MiniDump_*
+          Deploy/CrashDumps/*.txt
