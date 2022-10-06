@@ -58,6 +58,12 @@ env
 ./mib setup_only
 
 source Malterlib/Core/Scripts/Detect.sh
+if [[ "$BuildPlatform" == "Windows" ]] && [[ "$MalterlibDeploySymbols" == "true" ]]; then
+	rm -rf "$RootDir/Symbols"
+	mkdir -p "$RootDir/Symbols"
+	export MalterlibDeploySymbolsPath="`MalterlibConvertPath \"$RootDir/Symbols\"`"
+fi
+
 export MalterlibDependenciesDirectory="`MalterlibConvertPath \"$CompiledFiles/Dependencies\"`"
 export MalterlibCompiledFiles="`MalterlibConvertPath \"$CompiledFiles/\"`"
 
