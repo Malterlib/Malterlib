@@ -1,4 +1,5 @@
 set -ex
+echo ${SECONDS}s
 
 echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
 
@@ -25,6 +26,19 @@ if [[ "$BuildPlatform" == "Windows" ]]; then
 	export EnableArchitecture_x86="false"
 	export EnableArchitecture_x64="false"
 	export EnableArchitecture_${BuildArchitecture}="true"
+
+	export EnableDebugConfig="false"
+	export EnableDebugInlinedConfig="false"
+	export EnableReleaseConfig="false"
+	export EnableReleaseTestingConfig="false"
+
+	if [[ "$BuildConfiguration" == "Debug" ]]; then
+		export EnableDebugConfig="true"
+	elif [[ "$BuildConfiguration" == "Release Testing (Tests)" ]]; then
+		export EnableReleaseTestingConfig="true"
+	elif [[ "$BuildConfiguration" == "Release (Tests)" ]]; then
+		export EnableReleaseConfig="true"
+	fi
 else
 	export EnablePlatform_Linux="true"
 	export EnablePlatform_macOS="true"
@@ -38,22 +52,10 @@ mkdir -p BuildSystem/Default
 rm -rf "$Deploy/"* || true
 mkdir -p "$Deploy"
 
-env
-
-#df -h
-
-#MSYS_NO_PATHCONV=1 compact /C /S /I /Q /EXE || true
-#MSYS_NO_PATHCONV=1 compact /C /S /I /Q || true
-
-#df -h
-
-#pushd /c/BuildSystem
-
-#MSYS_NO_PATHCONV=1 compact /C /S /I /Q /EXE || true
-#MSYS_NO_PATHCONV=1 compact /C /S /I /Q || true
-#popd
-
-#df -h
+echo ${SECONDS}s
+if [ -d Malterlib/Core ]; then
+	git -C Malterlib/Core reset --hard
+fi
 
 ./mib setup_only
 
@@ -67,6 +69,7 @@ fi
 export MalterlibDependenciesDirectory="`MalterlibConvertPath \"$CompiledFiles/Dependencies\"`"
 export MalterlibCompiledFiles="`MalterlibConvertPath \"$CompiledFiles/\"`"
 
+echo ${SECONDS}s
 ./mib update_repos
 
 df -h
@@ -74,15 +77,18 @@ df -h
 MalterlibDeployRoot="`MalterlibConvertPath \"$Deploy\"`"
 echo MalterlibDeployRoot: $MalterlibDeployRoot
 echo "DefaultRoot \"${MalterlibDeployRoot}\"" > BuildSystem/Default/PostCopy.MConfig
+echo ${SECONDS}s
 ./mib prebuild Malterlib Tests
 
 df -h
 
+echo ${SECONDS}s
 if ! ./mib build Tests "$BuildPlatform" $BuildArchitecture "$BuildConfiguration" ; then
   echo Build failed
   df -h
   exit 1
 fi
+echo ${SECONDS}s
 
 df -h
 
