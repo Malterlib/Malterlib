@@ -30,7 +30,7 @@ env:
 jobs:
   build_windows:
     name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-    runs-on: self-hosted-windows-11-build
+    runs-on: runner-windows-16core
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -44,10 +44,11 @@ jobs:
       BuildConfiguration: ${{ matrix.configuration }}
       MalterlibEnableSanitizerReleaseConfigs: "false"
     steps:
-    - name: Set git to use LF
+    - name: Setup git config
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
+        git config --global core.symlinks true
     - uses: actions/checkout@v3
       with:
         lfs: 'true'
@@ -76,21 +77,22 @@ jobs:
     #     MaximumSize: 64GB
     #     DiskRoot: "C:"
     #     SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
-    # - name: Cache binaries
-    #   uses: actions/cache@v3
-    #   env:
-    #     cache-name: cache-binaries-windows-x64
-    #   with:
-    #     path: |
-    #       Binaries/Malterlib/Windows/x64
+    - name: Cache Binaries
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-binaries-windows-x64
+      with:
+        path: |
+          Binaries/Malterlib/Windows/x64
 
-    #     key: ${{ runner.os }}-binaries-${{ env.cache-name }}-${{ hashFiles('**/*.MRepo') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-binaries-${{ env.cache-name }}-
+        key: ${{ env.cache-name }}-${{ hashFiles('**/*.MRepo') }}
+        restore-keys: |
+          ${{ env.cache-name }}-
     - name: Build
       shell: bash -leo pipefail {0}
       run: |
         set -e
+        git reset --hard
         ./.github/workflows/Build.sh
     - uses: actions/upload-artifact@v3
       if: (failure() || success())
