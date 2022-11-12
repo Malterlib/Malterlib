@@ -75,7 +75,7 @@ jobs:
     #     DiskRoot: "C:"
     #     SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
     # - name: Cache binaries
-    #   uses: actions/cache@v2
+    #   uses: actions/cache@v3
     #   env:
     #     cache-name: cache-binaries-windows-x64
     #   with:
@@ -90,7 +90,7 @@ jobs:
       run: |
         set -e
         ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: (failure() || success())
       with:
         name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
@@ -121,7 +121,7 @@ jobs:
       run: |
         set -e
         ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: (failure() || success())
       with:
         name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
@@ -152,7 +152,7 @@ jobs:
       run: |
         set -e
         ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: (failure() || success())
       with:
         name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
@@ -171,7 +171,7 @@ jobs:
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
         path: Artifacts
@@ -213,7 +213,7 @@ jobs:
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
         path: Artifacts
@@ -279,7 +279,7 @@ jobs:
         architecture: [x64, x86]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)']
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
         path: Artifacts
