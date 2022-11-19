@@ -38,6 +38,8 @@ if [[ "$BuildPlatform" == "Windows" ]]; then
 		export EnableReleaseTestingConfig="true"
 	elif [[ "$BuildConfiguration" == "Release (Tests)" ]]; then
 		export EnableReleaseConfig="true"
+	elif [[ "$BuildConfiguration" == "Release (ASan Tests)" ]]; then
+		export EnableReleaseConfig="true"
 	fi
 else
 	export EnablePlatform_Linux="true"

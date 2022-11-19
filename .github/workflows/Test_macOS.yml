@@ -1,0 +1,100 @@
+name: Test macOS
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+      architecture:
+        required: true
+        type: string
+      configuration:
+        required: true
+        type: string
+
+env:
+  Malterlib_UseCachedEnvironment: "false"
+  Malterlib_UseUserSettings: "false"
+  MalterlibRepositoryHardReset: "true"
+  MalterlibPreBuildNoClean: "true"
+  MalterlibDisableBuildSystemGeneration: "true"
+  MalterlibEnableLinkTimeCodeGeneration: "false"
+  MalterlibImportUpdateCache: "false"
+  MalterlibBuildLogFile: "Artifacts/Build.log"
+  MalterlibEnableSanitizerReleaseConfigs: "true"
+  MalterlibEnablePrefTestConfig: "false"
+  MalterlibEnableInternalTests: "true"
+  MalterlibDebugSymbolsEnable: "false"
+  MalterlibDeploySymbols: "false"
+  MalterlibSupportCrashDumps: "false"
+  RunningCI: "true"
+  MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
+  MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
+  ASAN_OPTIONS: "detect_leaks=0"
+  TSAN_OPTIONS: "second_deadlock_stack=1"
+
+jobs:
+  build_mac:
+    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+    runs-on: self-hosted-mac-12-x64
+    timeout-minutes: 120
+    env:
+      BuildPlatform: ${{ inputs.platform }}
+      BuildArchitecture: ${{ inputs.architecture }}
+      BuildConfiguration: ${{ inputs.configuration }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        lfs: 'true'
+        clean: false
+        persist-credentials: false
+    - name: Build
+      shell: bash
+      run: |
+        set -e
+        ./.github/workflows/Build.sh
+    - uses: actions/upload-artifact@v3
+      if: (failure() || success())
+      with:
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        path: Artifacts
+
+  test_mac:
+    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+    runs-on: ${{ matrix.os }}
+    needs: [build_mac]
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [self-hosted-macos-10.15, self-hosted-macos-11, self-hosted-macos-12]
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        path: Artifacts
+    - name: Run tests
+      shell: bash
+      run: |
+        if ! which gtar; then
+          brew install gnu-tar --quiet
+        fi
+        if ! which zstd; then
+          brew install zstd --quiet
+        fi
+        if ! which node; then
+          brew install node --quiet
+        fi
+        if ! which npm; then
+          brew install npm --quiet
+        fi
+        pwd
+        echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
+        rm -rf Deploy
+        mkdir -p Deploy
+        cd Deploy
+        gtar -xf ../Artifacts/Deploy.tar.zst
+        cd Tests*
+        ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
+        exit 0

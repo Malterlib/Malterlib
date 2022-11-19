@@ -6,313 +6,48 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  Malterlib_UseCachedEnvironment: "false"
-  Malterlib_UseUserSettings: "false"
-  MalterlibRepositoryHardReset: "true"
-  MalterlibPreBuildNoClean: "true"
-  MalterlibDisableBuildSystemGeneration: "true"
-  MalterlibEnableLinkTimeCodeGeneration: "false"
-  MalterlibImportUpdateCache: "false"
-  MalterlibBuildLogFile: "Artifacts/Build.log"
-  MalterlibEnableSanitizerReleaseConfigs: "true"
-  MalterlibEnablePrefTestConfig: "false"
-  MalterlibEnableInternalTests: "true"
-  MalterlibDebugSymbolsEnable: "false"
-  MalterlibDeploySymbols: "false"
-  MalterlibSupportCrashDumps: "false"
-  RunningCI: "true"
-  MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
-  MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
-  ASAN_OPTIONS: "detect_leaks=0"
-  TSAN_OPTIONS: "second_deadlock_stack=1"
-
 jobs:
-  build_windows:
-    name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-    runs-on: runner-windows-16core
-    timeout-minutes: 120
+  run_windows:
     strategy:
       fail-fast: false
       matrix:
         platform: [Windows]
         architecture: [x64, x86]
-        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)']
-    env:
-      BuildPlatform: ${{ matrix.platform }}
-      BuildArchitecture: ${{ matrix.architecture }}
-      BuildConfiguration: ${{ matrix.configuration }}
-      MalterlibEnableSanitizerReleaseConfigs: "false"
-    steps:
-    - name: Setup git config
-      run: |
-        git config --global core.autocrlf false
-        git config --global core.eol lf
-        git config --global core.symlinks true
-    - uses: actions/checkout@v3
-      with:
-        lfs: 'true'
-        clean: false
-        persist-credentials: false
-    # - name: Configure Pagefile
-    #   shell: pwsh
-    #   run: |
-    #     [System.UInt64] $MinimumSize = ($env:MinimumSize / 1kb) * 1kb
-    #     if ($MinimumSize -le 0) {
-    #       $MinimumSize = 8gb
-    #     }
-    #     [System.UInt64] $MaximumSize = ($env:MaximumSize / 1kb) * 1kb
-    #     if ($MaximumSize -le 0) {
-    #       $MaximumSize = $MinimumSize
-    #     }
-    #     [System.String] $DiskRoot = $env:DiskRoot
-    #     echo "Pagefile configuration:"
-    #     echo "- Minimum size: $($MinimumSize)"
-    #     echo "- Maximum size: $($MaximumSize)"
-    #     echo "- Disk root: $($DiskRoot)"
-    #     Add-Type -Path "$env:SourcePath"
-    #     [Util.PageFile]::SetPageFileSize($MinimumSize, $MaximumSize, $DiskRoot)
-    #   env:
-    #     MinimumSize: 16GB
-    #     MaximumSize: 64GB
-    #     DiskRoot: "C:"
-    #     SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
-    - name: Cache Binaries
-      uses: actions/cache@v3
-      env:
-        cache-name: cache-binaries-windows-x64
-      with:
-        path: |
-          Binaries/Malterlib/Windows/x64
+        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (ASan Tests)']
+    uses: ./.github/workflows/Test_Windows.yml
+    with:
+      platform: ${{ matrix.platform }}
+      architecture: ${{ matrix.architecture }}
+      configuration: ${{ matrix.configuration }}
+    secrets: inherit
+    name: Windows ${{ matrix.architecture }} ${{ matrix.configuration }}
 
-        key: ${{ env.cache-name }}-${{ hashFiles('**/*.MRepo') }}
-        restore-keys: |
-          ${{ env.cache-name }}-
-    - name: Build
-      shell: bash -leo pipefail {0}
-      run: |
-        set -e
-        git reset --hard
-        ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v3
-      if: (failure() || success())
-      with:
-        name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: |
-          Artifacts
-    - uses: actions/upload-artifact@v2
-      if: (success() && (env.MalterlibDeploySymbols == 'true'))
-      with:
-        name: Symbols ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: |
-          Symbols
-
-  build_mac:
-    name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-    runs-on: self-hosted-mac-12-x64
-    timeout-minutes: 120
+  run_mac:
     strategy:
       fail-fast: false
       matrix:
         platform: [macOS]
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
-    env:
-      BuildPlatform: ${{ matrix.platform }}
-      BuildArchitecture: ${{ matrix.architecture }}
-      BuildConfiguration: ${{ matrix.configuration }}
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        lfs: 'true'
-        clean: false
-        persist-credentials: false
-    - name: Build
-      shell: bash
-      run: |
-        set -e
-        ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v3
-      if: (failure() || success())
-      with:
-        name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: Artifacts
+    uses: ./.github/workflows/Test_macOS.yml
+    with:
+      platform: ${{ matrix.platform }}
+      architecture: ${{ matrix.architecture }}
+      configuration: ${{ matrix.configuration }}
+    secrets: inherit
+    name: macOS ${{ matrix.architecture }} ${{ matrix.configuration }}
 
-  build_linux:
-    name: Build ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-    runs-on: self-hosted-mac-12-x64
-    timeout-minutes: 120
+  run_linux:
     strategy:
       fail-fast: false
       matrix:
         platform: [Linux]
         architecture: [x64]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
-    env:
-      BuildPlatform: ${{ matrix.platform }}
-      BuildArchitecture: ${{ matrix.architecture }}
-      BuildConfiguration: ${{ matrix.configuration }}
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        lfs: 'true'
-        clean: false
-        persist-credentials: false
-    - name: Build
-      shell: bash
-      run: |
-        set -e
-        ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v3
-      if: (failure() || success())
-      with:
-        name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: Artifacts
-
-  test_mac:
-    name: Test ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-    runs-on: ${{ matrix.os }}
-    needs: [build_mac]
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macOS]
-        os: [self-hosted-macos-10.15, self-hosted-macos-11, self-hosted-macos-12]
-        architecture: [x64]
-        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
-    steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: Artifacts
-    - name: Run tests
-      shell: bash
-      run: |
-        if ! which gtar; then
-          brew install gnu-tar --quiet
-        fi
-        if ! which zstd; then
-          brew install zstd --quiet
-        fi
-        if ! which node; then
-          brew install node --quiet
-        fi
-        if ! which npm; then
-          brew install npm --quiet
-        fi
-        pwd
-        echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        rm -rf Deploy
-        mkdir -p Deploy
-        cd Deploy
-        gtar -xf ../Artifacts/Deploy.tar.zst
-        cd Tests*
-        ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
-        exit 0
-
-  test_linux:
-    name: Test ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-    runs-on: ${{ matrix.os }}
-    needs: [build_linux]
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [Linux]
-        os: [ubuntu-20.04]
-        architecture: [x64]
-        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
-    steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: Artifacts
-    - name: Swap space report before modification
-      shell: bash
-      run: |
-        echo "Memory and swap:"
-        df -h
-        free -h
-        echo
-        swapon --show
-        echo
-    - name: Set Swap
-      shell: bash
-      run: |
-          export SWAP_FILE=$(swapon --show=NAME | tail -n 1)
-          sudo swapoff $SWAP_FILE
-          sudo rm $SWAP_FILE
-          sudo fallocate -l 20G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-    - name: Swap space report after modification
-      shell: bash
-      run: |
-        echo "Memory and swap:"
-        df -h
-        free -h
-        echo
-        swapon --show
-        echo
-    - name: Run tests
-      shell: bash
-      run: |
-        pwd
-        loginctl enable-linger runner
-        sleep 1
-        echo $XDG_RUNTIME_DIR
-        export XDG_RUNTIME_DIR=/run/user/$UID
-        echo $XDG_RUNTIME_DIR
-        env
-        ps aux --forest
-        systemctl status || true
-        echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        rm -rf Deploy
-        mkdir -p Deploy
-        cd Deploy
-        tar -xf ../Artifacts/Deploy.tar.zst
-        cd Tests*
-        ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
-        exit 0
-
-  test_windows:
-    name: Test ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-    runs-on: ${{ matrix.os }}
-    needs: [build_windows]
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [Windows]
-        os: [windows-2019, windows-2022]
-        architecture: [x64, x86]
-        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)']
-    steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: Tests ${{ matrix.platform }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: Artifacts
-    - name: Run tests
-      shell: bash
-      run: |
-        set -ex
-        pwd
-        echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        rm -rf Deploy
-        mkdir -p Deploy
-        cd Deploy
-        export MalterlibCrashDumpDir=`cygpath -m "$PWD/CrashDumps"`
-        mkdir -p "$PWD/CrashDumps"
-        tar -xf ../Artifacts/Deploy.tar.zst
-        cd Tests*
-        ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
-        exit 0
-    - uses: actions/upload-artifact@v3
-      if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
-      with:
-        name: Crash Dumps ${{ matrix.platform }} ${{ matrix.os }} ${{ matrix.architecture }} ${{ matrix.configuration }}
-        path: |
-          Deploy/CrashDumps/MiniDump_*
-          Deploy/CrashDumps/*.txt
+    uses: ./.github/workflows/Test_Linux.yml
+    with:
+      platform: ${{ matrix.platform }}
+      architecture: ${{ matrix.architecture }}
+      configuration: ${{ matrix.configuration }}
+    secrets: inherit
+    name: Linux ${{ matrix.architecture }} ${{ matrix.configuration }}
