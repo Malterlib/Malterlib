@@ -37,8 +37,9 @@ env:
 jobs:
   build_windows:
     name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
-    runs-on: runner-windows-16core
-    timeout-minutes: 120
+    #runs-on: runner-windows-16core
+    runs-on: self-hosted-windows-11-build
+    timeout-minutes: 30
     env:
       BuildPlatform: ${{ inputs.platform }}
       BuildArchitecture: ${{ inputs.architecture }}
@@ -134,7 +135,7 @@ jobs:
         mkdir -p "$PWD/CrashDumps"
         tar -xf ../Artifacts/Deploy.tar.zst
         cd Tests*
-        ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
+        ./RunAllTests --quiet --launch-per-suite -- --logs
         exit 0
     - uses: actions/upload-artifact@v3
       if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))

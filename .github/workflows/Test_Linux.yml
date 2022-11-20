@@ -68,6 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        #os: [ubuntu-20.04, ubuntu-22.04]
         os: [ubuntu-20.04]
     steps:
     - uses: actions/download-artifact@v3
@@ -89,10 +90,10 @@ jobs:
           export SWAP_FILE=$(swapon --show=NAME | tail -n 1)
           sudo swapoff $SWAP_FILE
           sudo rm $SWAP_FILE
-          sudo fallocate -l 20G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          sudo fallocate -l 12G $SWAP_FILE
+          sudo chmod 600 $SWAP_FILE
+          sudo mkswap $SWAP_FILE
+          sudo swapon $SWAP_FILE
     - name: Swap space report after modification
       shell: bash
       run: |
@@ -120,5 +121,5 @@ jobs:
         cd Deploy
         tar -xf ../Artifacts/Deploy.tar.zst
         cd Tests*
-        ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
+        ./RunAllTests --quiet --launch-per-suite -- --logs
         exit 0

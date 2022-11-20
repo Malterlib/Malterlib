@@ -68,6 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        #os: [macos-10.15, macos-11, macos-12]
         os: [self-hosted-macos-10.15, self-hosted-macos-11, self-hosted-macos-12]
     steps:
     - uses: actions/download-artifact@v3
@@ -96,5 +97,5 @@ jobs:
         cd Deploy
         gtar -xf ../Artifacts/Deploy.tar.zst
         cd Tests*
-        ./RunAllTests --quiet --no-parallel --launch-per-suite -- --logs
+        ./RunAllTests --quiet --launch-per-suite -- --logs
         exit 0
