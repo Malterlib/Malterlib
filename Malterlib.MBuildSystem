@@ -49,7 +49,7 @@ Property
 		!!MalterlibEnableThirdPartyComparisonTests undefined
 	}
 
-	MalterlibVerboseCMakeHash define bool = false
+	MalterlibVerboseCMakeHash: bool = false
 }
 
 Import.CMake_VerboseHash true
@@ -80,7 +80,7 @@ Import.CMake_VerboseHash true
 
 Property
 {
-	MalterlibEnableAllFilesWorkspace define bool = false // User(Build System)=true: Enable all files workspace
+	MalterlibEnableAllFilesWorkspace: bool = false // User(Build System)=true: Enable all files workspace
 }
 
 %Workspace "AllFiles"
