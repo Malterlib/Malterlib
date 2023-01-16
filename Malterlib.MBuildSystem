@@ -94,3 +94,145 @@ Property
 	Property.EnableTestConfigs false
 	%Target "AllFiles"
 }
+
+%Target "Exe_TestDotNet"
+{
+	Property
+	{
+		ProductName "Test Dot Net"
+	}
+	Target
+	{
+		BaseName "TestDotNet"
+		Type "ConsoleExecutable"
+		Language "C#"
+		TargetFrameworkVersion "net4.8"
+		FileName "TestDotNet"
+	}
+	%Group "Source"
+	{
+		%File "Test.cs"
+	}
+	%Dependency "Microsoft.Build"
+	{
+		Dependency
+		{
+			Type "Package"
+			Version "14.3.0"
+		}
+	}
+
+	//%Dependency "Lib_Malterlib"
+}
+
+%Target "Tool_TransativeDependency"
+{
+	Target
+	{
+		Type "Tool"
+		BaseName "TransativeDependency"
+		FollowIndirectDependencies true
+	}
+
+	%Dependency "ShouldNotExist.lib"
+	{
+		Dependency
+		{
+			Indirect true
+			Type "Library"
+		}
+	}
+}
+
+%Target "Exe_TestDotNetCpp"
+{
+	Property
+	{
+		ProductName "Test Dot Net C++"
+		MalterlibDisableMalterlib true
+	}
+	Target
+	{
+		BaseName "TestDotNetCpp"
+		Type "ConsoleExecutable"
+		FileName "TestDotNet++"
+	}
+	Target
+	{
+		!!GeneratorFamily "VisualStudio"
+		CLRSupport true
+		TargetFrameworkVersion "v4.8"
+	}
+	Compile
+	{
+		!GeneratorFamily "VisualStudio"
+		PrefixHeader undefined
+	}
+	Compile
+	{
+		!!GeneratorFamily "VisualStudio"
+
+		Type "C++Managed"
+		{
+			&
+			{
+				this.Type "File"
+				|
+				{
+					this.Identity ~"*.cpp"
+					this.Identity ~"*.cc"
+				}
+			}
+		}
+
+		Optimize "Full"
+		{
+			!!Compile.Type "C++Managed"
+		}
+	}
+	%Group "Source"
+	{
+		%File "TestManaged.cpp"
+		%File "TestManaged2.cpp"
+		{
+			Compile.Type "C++"
+		}
+	}
+	%Dependency "Kernel32.lib"
+	{
+		!!GeneratorFamily "VisualStudio"
+		Dependency
+		{
+			Type "Library"
+		}
+	}
+	%Dependency "zlib"
+	{
+		!GeneratorFamily "VisualStudio"
+		Dependency
+		{
+			Type "Library"
+		}
+	}
+	%Dependency ["System", "System.Data", "System.Xml"]
+	{
+		!!GeneratorFamily "VisualStudio"
+
+		Dependency
+		{
+			Type "AssemblyReference"
+		}
+	}
+	%Dependency "Tool_TransativeDependency"
+}
+
+%Workspace "TestDotNet"
+{
+	Property.MalterlibPostCopyProject "TestDotNet"
+
+	%Target "Exe_TestDotNet"
+	{
+		!!GeneratorFamily "VisualStudio"
+	}
+	%Target "Exe_TestDotNetCpp"
+}
