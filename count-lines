@@ -1,0 +1,3 @@
+#/bin/bash
+
+cloc --exclude-dir=node_modules,.meteor,ImportCache,SourceGenerated,External,Binaries,BuildSystem '--not-match-f=((LICENSE\.Malterlib$)|(.*\.MRepoState$))' '--lang-no-ext=C/C++ Header' --read-lang-def Malterlib/Core/Documentation/cloc.def --timeout 100 "$@"
