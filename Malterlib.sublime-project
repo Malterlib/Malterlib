@@ -45,6 +45,34 @@
             "cmd": ["bash", "-c", "cd '$project_path' && ./mib build Tests macOS x64 Debug"],
             "target": "ansi_color_build",
             "syntax": "Packages/ANSIescape/ANSI.tmLanguage"
-        }
+        },
+        {
+            "name": "Generate",
+            "cmd": ["bash", "--login", "-c", "cd '$project_path' && ./mib generate --skip-update"],
+            "target": "ansi_color_build",
+            "file_regex": "^\\s*(.*?):([0-9]+):?([0-9]+)?:? (.*)$",
+            "syntax": "Packages/ANSIescape/ANSI.tmLanguage"
+        },
+        {
+            "name": "Generate Detailed",
+            "cmd": ["bash", "--login", "-c", "cd '$project_path' && ./mib generate --detailed-positions=true --detailed-values=true"],
+            "target": "ansi_color_build",
+            "file_regex": "^\\s*(.*?):([0-9]+):?([0-9]+)?:? (.*)$",
+            "syntax": "Packages/ANSIescape/ANSI.tmLanguage"
+        },
+        {
+            "name": "Generate (Windows)",
+            "cmd": ["bash", "--login", "-c", "cd '$project_path' && ./mib generate"],
+            "target": "ansi_color_build",
+            "file_regex": "^\\s*(.*?)\\(([0-9]+)\\,?([0-9]+)?\\): (.*)$",
+            "syntax": "Packages/ANSIescape/ANSI.tmLanguage"
+        },
+        {
+            "name": "Generate Detailed (Windows)",
+            "cmd": ["bash", "--login", "-c", "cd '$project_path' && ./mib generate --detailed-positions=true --detailed-values=true"],
+            "target": "ansi_color_build",
+            "file_regex": "^\\s*(.*?)\\(([0-9]+)\\,?([0-9]+)?\\): (.*)$",
+            "syntax": "Packages/ANSIescape/ANSI.tmLanguage"
+        },
     ]
 }
