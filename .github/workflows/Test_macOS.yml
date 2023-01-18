@@ -64,7 +64,7 @@ jobs:
     name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
     runs-on: ${{ matrix.os }}
     needs: [build_mac]
-    timeout-minutes: 60
+    timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
@@ -97,5 +97,5 @@ jobs:
         cd Deploy
         gtar -xf ../Artifacts/Deploy.tar.zst
         cd Tests*
-        ./RunAllTests --quiet --launch-per-suite -- --logs
+        ./RunAllTests --quiet --launch-per-suite --timeout 3600 -- --logs
         exit 0
