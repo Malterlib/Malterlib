@@ -122,6 +122,39 @@ jobs:
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: Artifacts
+    - name: Disk space before
+      shell: bash
+      run: |
+        echo Workspace: '${{ github.workspace }}'
+        df -h
+        curl -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -H 'Accept: application/vnd.github.v3.raw' -L -O "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/.github/workflows/SetPageFileSize.cs?ref=$GITHUB_REF"
+    - name: Configure Pagefile
+      shell: pwsh
+      run: |
+        [System.UInt64] $MinimumSize = ($env:MinimumSize / 1kb) * 1kb
+        if ($MinimumSize -le 0) {
+          $MinimumSize = 8gb
+        }
+        [System.UInt64] $MaximumSize = ($env:MaximumSize / 1kb) * 1kb
+        if ($MaximumSize -le 0) {
+          $MaximumSize = $MinimumSize
+        }
+        [System.String] $DiskRoot = $env:DiskRoot
+        echo "Pagefile configuration:"
+        echo "- Minimum size: $($MinimumSize)"
+        echo "- Maximum size: $($MaximumSize)"
+        echo "- Disk root: $($DiskRoot)"
+        Add-Type -Path "$env:SourcePath"
+        [Util.PageFile]::SetPageFileSize($MinimumSize, $MaximumSize, $DiskRoot)
+      env:
+        MinimumSize: 16GB
+        MaximumSize: 64GB
+        DiskRoot: "C:"
+        SourcePath: ${{ github.workspace }}/SetPageFileSize.cs
+    - name: Disk space after
+      shell: bash
+      run: |
+        df -h
     - name: Run tests
       shell: bash
       run: |
