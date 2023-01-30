@@ -33,6 +33,7 @@ env:
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
+  UBSAN_OPTIONS: "halt_on_error=1"
 
 jobs:
   build_linux:
