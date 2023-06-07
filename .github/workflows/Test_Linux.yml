@@ -97,7 +97,7 @@ jobs:
           sudo mkswap $SWAP_FILE
           sudo swapon $SWAP_FILE
           export EXTRA_SWAP_FILE=/extra.swap
-          sudo fallocate -l 12G $EXTRA_SWAP_FILE
+          sudo fallocate -l 8G $EXTRA_SWAP_FILE
           sudo chmod 600 $EXTRA_SWAP_FILE
           sudo mkswap $EXTRA_SWAP_FILE
           sudo swapon $EXTRA_SWAP_FILE
