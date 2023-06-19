@@ -9,6 +9,7 @@
 				"BuildSystem/SafeMib",
 				"BuildSystem/Default/*",
 				"External",
+				"Malterlib/Tool/Scripts/build",
 			],
 			"file_exclude_patterns":
 			[
