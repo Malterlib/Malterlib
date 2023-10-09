@@ -71,7 +71,7 @@ jobs:
       fail-fast: false
       matrix:
         #os: [macos-10.15, macos-11, macos-12]
-        os: [self-hosted-macos-10.15, self-hosted-macos-11, self-hosted-macos-12]
+        os: [self-hosted-macos-10.15, self-hosted-macos-11, self-hosted-macos-12, self-hosted-macos-13, self-hosted-macos-14]
     steps:
     - uses: actions/download-artifact@v3
       with:
