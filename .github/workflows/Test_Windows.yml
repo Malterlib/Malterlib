@@ -79,17 +79,16 @@ jobs:
     #     MaximumSize: 64GB
     #     DiskRoot: "C:"
     #     SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
-    - name: Cache Binaries
-      uses: actions/cache@v3
-      env:
-        cache-name: cache-binaries-windows-x64
-      with:
-        path: |
-          Binaries/Malterlib/Windows/x64
-
-        key: ${{ env.cache-name }}-${{ hashFiles('**/*.MRepo') }}
-        restore-keys: |
-          ${{ env.cache-name }}-
+    #- name: Cache Binaries
+    #  uses: actions/cache@v3
+    #  env:
+    #    cache-name: cache-binaries-windows-x64
+    #  with:
+    #    path: |
+    #      Binaries/Malterlib/Windows/x64
+    #    key: ${{ env.cache-name }}-${{ hashFiles('**/*.MRepo') }}
+    #    restore-keys: |
+    #      ${{ env.cache-name }}-
     - name: Build
       shell: bash -leo pipefail {0}
       run: |
