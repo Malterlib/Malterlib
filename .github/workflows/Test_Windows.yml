@@ -101,7 +101,7 @@ jobs:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: |
           Artifacts
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: (success() && (env.MalterlibDeploySymbols == 'true'))
       with:
         name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
