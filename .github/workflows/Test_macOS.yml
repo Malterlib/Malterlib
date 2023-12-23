@@ -55,6 +55,7 @@ jobs:
       shell: bash
       run: |
         set -e
+        dig +short myip.opendns.com @resolver1.opendns.com
         ./.github/workflows/Build.sh
     - uses: actions/upload-artifact@v3
       if: (failure() || success())
