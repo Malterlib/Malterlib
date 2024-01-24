@@ -51,7 +51,7 @@ jobs:
         git config --global core.autocrlf false
         git config --global core.eol lf
         git config --global core.symlinks true
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         lfs: 'true'
         clean: false
@@ -80,7 +80,7 @@ jobs:
     #     DiskRoot: "C:"
     #     SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
     #- name: Cache Binaries
-    #  uses: actions/cache@v3
+    #  uses: actions/cache@v4
     #  env:
     #    cache-name: cache-binaries-windows-x64
     #  with:
@@ -95,13 +95,13 @@ jobs:
         set -e
         git reset --hard
         ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: (failure() || success())
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: |
           Artifacts
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: (success() && (env.MalterlibDeploySymbols == 'true'))
       with:
         name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
@@ -118,7 +118,7 @@ jobs:
       matrix:
         os: [windows-2019, windows-2022]
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: Artifacts
@@ -170,7 +170,7 @@ jobs:
         cd Tests*
         ./RunAllTests --quiet --launch-per-suite --timeout 3600 -- --logs
         exit 0
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
       with:
         name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
