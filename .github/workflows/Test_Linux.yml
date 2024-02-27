@@ -29,6 +29,7 @@ env:
   MalterlibDeploySymbols: "false"
   MalterlibSupportCrashDumps: "false"
   MalterlibFlakySuites: "Malterlib/File/File/Tests"
+  MalterlibFileLineOnDebugBreak: "true"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
