@@ -161,6 +161,9 @@ jobs:
       shell: bash
       run: |
         set -ex
+        if [[ "$MatrixOs" == "windows-2019" ]]; then
+          MalterlibFlakySuites="$MalterlibFlakySuites;Malterlib/Cloud/SecretsManager/General"
+        fi
         pwd
         echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
         rm -rf Deploy
@@ -172,6 +175,9 @@ jobs:
         cd Tests*
         ./RunAllTests --quiet --launch-per-suite --timeout 3600 -- --logs
         exit 0
+      env:
+        MatrixOs: ${{ matrix.os }}
+
     - uses: actions/upload-artifact@v4
       if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
       with:
