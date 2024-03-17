@@ -155,5 +155,5 @@ jobs:
         cd Deploy
         tar -xf ../Artifacts/Deploy.tar.zst
         cd Tests*
-        ./RunAllTests --quiet --launch-per-suite --timeout 3600 -- --logs
+        ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
         exit 0
