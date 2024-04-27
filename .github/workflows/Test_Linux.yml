@@ -148,12 +148,16 @@ jobs:
         echo $XDG_RUNTIME_DIR
         env
         ps aux --forest
+        ArtifactsPath="$PWD/Artifacts/Deploy.tar.zst"
         systemctl status || true
         echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        rm -rf Deploy
-        mkdir -p Deploy
-        cd Deploy
-        tar -xf ../Artifacts/Deploy.tar.zst
-        cd Tests*
+        sudo rm -rf /Deploy
+        sudo mkdir -p /Deploy
+        sudo chown $USER /Deploy
+        cd /Deploy
+        tar -xf "$ArtifactsPath"
+        mv Tests* Tests
+        cd Tests
         ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
+        sudo ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
         exit 0

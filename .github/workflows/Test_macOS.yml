@@ -96,10 +96,17 @@ jobs:
         fi
         pwd
         echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        rm -rf Deploy
-        mkdir -p Deploy
-        cd Deploy
-        gtar -xf ../Artifacts/Deploy.tar.zst
-        cd Tests*
+        ArtifactsPath="$PWD/Artifacts/Deploy.tar.zst"
+        sudo rm -rf /opt/Deploy
+        sudo mkdir -p /opt/Deploy
+        sudo chown $USER /opt/Deploy
+        cd /opt/Deploy
+        gtar -xf "$ArtifactsPath"
+        TestsDirName=`find Tests* -maxdepth 0`
+        if [[ "$TestsDirName" != "Tests" ]]; then
+          mv "$TestsDirName" Tests
+        fi
+        cd Tests
         ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
+        sudo ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
         exit 0
