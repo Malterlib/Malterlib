@@ -18,6 +18,7 @@ env:
   Malterlib_UseUserSettings: "false"
   MalterlibRepositoryHardReset: "true"
   MalterlibPreBuildNoClean: "true"
+  MalterlibPreBuildNoReBuild: "true"
   MalterlibDisableBuildSystemGeneration: "true"
   MalterlibEnableLinkTimeCodeGeneration: "false"
   MalterlibImportUpdateCache: "false"

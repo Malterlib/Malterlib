@@ -14,13 +14,28 @@ jobs:
         platform: [Windows]
         architecture: [x64, x86]
         configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (ASan Tests)']
+        compiler: [MSVC]
+        include:
+          - compiler: Clang
+            platform: Windows
+            architecture: x64
+            configuration: 'Debug (Clang)'
+          - compiler: Clang
+            platform: Windows
+            architecture: x64
+            configuration: 'Release Testing (Clang Tests)'
+          - compiler: Clang
+            platform: Windows
+            architecture: x64
+            configuration: 'Release (Clang Tests)'
     uses: ./.github/workflows/Test_Windows.yml
     with:
       platform: ${{ matrix.platform }}
       architecture: ${{ matrix.architecture }}
       configuration: ${{ matrix.configuration }}
+      compiler: ${{ matrix.compiler }}
     secrets: inherit
-    name: Windows ${{ matrix.architecture }} ${{ matrix.configuration }}
+    name: Windows ${{ matrix.architecture }} ${{ matrix.configuration }} MSVC
 
   run_mac:
     strategy:

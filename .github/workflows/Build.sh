@@ -23,24 +23,13 @@ if [[ "$BuildPlatform" == "Windows" ]]; then
 	CompiledFiles="/c/BuildSystem/CompiledFiles"
 	Deploy="/c/BuildSystem/Deploy"
 	export EnablePlatform_Windows="true"
-	export EnableArchitecture_x86="false"
-	export EnableArchitecture_x64="false"
-	export EnableArchitecture_${BuildArchitecture}="true"
+	export EnableArchitecture_x86="true"
+	export EnableArchitecture_x64="true"
+	export EnableArchitecture_arm64="false"
 
-	export EnableDebugConfig="false"
-	export EnableDebugInlinedConfig="false"
-	export EnableReleaseConfig="false"
-	export EnableReleaseTestingConfig="false"
-
-	if [[ "$BuildConfiguration" == "Debug" ]]; then
-		export EnableDebugConfig="true"
-	elif [[ "$BuildConfiguration" == "Release Testing (Tests)" ]]; then
-		export EnableReleaseTestingConfig="true"
-	elif [[ "$BuildConfiguration" == "Release (Tests)" ]]; then
-		export EnableReleaseConfig="true"
-	elif [[ "$BuildConfiguration" == "Release (ASan Tests)" ]]; then
-		export EnableReleaseConfig="true"
-	fi
+	export EnableDebugConfig="true"
+	export EnableReleaseConfig="true"
+	export EnableReleaseTestingConfig="true"
 else
 	export EnablePlatform_Linux="true"
 	export EnablePlatform_macOS="true"

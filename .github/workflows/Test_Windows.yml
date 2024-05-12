@@ -12,12 +12,16 @@ on:
       configuration:
         required: true
         type: string
+      compiler:
+        required: true
+        type: string
 
 env:
   Malterlib_UseCachedEnvironment: "false"
   Malterlib_UseUserSettings: "false"
   MalterlibRepositoryHardReset: "true"
   MalterlibPreBuildNoClean: "true"
+  MalterlibPreBuildNoReBuild: "true"
   MalterlibDisableBuildSystemGeneration: "true"
   MalterlibEnableLinkTimeCodeGeneration: "false"
   MalterlibImportUpdateCache: "false"
@@ -31,6 +35,8 @@ env:
   MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunch/*/*/KillSandbox"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
+  MalterlibUseClangForWindowsConfigs: "true"
+  MalterlibTestsMem_EnablePerfTests: "false"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
@@ -39,7 +45,7 @@ env:
 
 jobs:
   build_windows:
-    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
     #runs-on: runner-windows-16core
     runs-on: self-hosted-windows-11-build
     timeout-minutes: 30
@@ -100,18 +106,18 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: (failure() || success())
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
         path: |
           Artifacts
     - uses: actions/upload-artifact@v4
       if: (success() && (env.MalterlibDeploySymbols == 'true'))
       with:
-        name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
         path: |
           Symbols
 
   test_windows:
-    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
     runs-on: ${{ matrix.os }}
     needs: [build_windows]
     timeout-minutes: 70
@@ -122,7 +128,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
         path: Artifacts
     - name: Disk space before
       shell: bash
@@ -181,7 +187,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
       with:
-        name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
         path: |
           Deploy/CrashDumps/MiniDump_*
           Deploy/CrashDumps/*.txt
