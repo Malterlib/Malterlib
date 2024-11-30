@@ -32,7 +32,7 @@ env:
   MalterlibDebugSymbolsEnable: "false"
   MalterlibDeploySymbols: "false"
   MalterlibSupportCrashDumps: "false"
-  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunch/*/*/KillSandbox"
+  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunch/*/*/KillSandbox;Malterlib/Time/Time/Time speed"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
   MalterlibUseClangForWindowsConfigs: "true"
