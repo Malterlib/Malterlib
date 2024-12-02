@@ -138,6 +138,12 @@ jobs:
         free -h
         echo
 
+    - name: Install dependencies
+      shell: bash
+      run: |
+        # To reproduce bug where getgrnam_r returns errors when user is not found
+        sudo apt install sssd
+
     - name: Run tests
       shell: bash
       run: |
