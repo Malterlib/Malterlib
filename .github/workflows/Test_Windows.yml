@@ -38,6 +38,7 @@ env:
   MalterlibReproducibleBuild: "true"
   MalterlibUseClangForWindowsConfigs: "true"
   MalterlibTestsMem_EnablePerfTests: "false"
+  MalterlibLogCategoryWidth: "60"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}

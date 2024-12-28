@@ -33,6 +33,7 @@ env:
   MalterlibFlakyErrors: "Timed out waiting for user/group change to come into effect"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
+  MalterlibLogCategoryWidth: "60"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
@@ -110,5 +111,5 @@ jobs:
         fi
         cd Tests
         ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
-        sudo ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
+        sudo -E ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
         exit 0
