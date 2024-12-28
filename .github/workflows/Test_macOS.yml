@@ -34,6 +34,7 @@ env:
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
   MalterlibLogCategoryWidth: "60"
+  MalterlibEnableBreakpad: "true"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
@@ -104,6 +105,7 @@ jobs:
         sudo mkdir -p /opt/Deploy
         sudo chown $USER /opt/Deploy
         cd /opt/Deploy
+        export MalterlibCrashDumpDir="$PWD/CrashDumps"
         gtar -xf "$ArtifactsPath"
         TestsDirName=`find Tests* -maxdepth 0`
         if [[ "$TestsDirName" != "Tests" ]]; then

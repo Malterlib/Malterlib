@@ -33,6 +33,7 @@ env:
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
   MalterlibLogCategoryWidth: "60"
+  MalterlibEnableBreakpad: "true"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
@@ -162,6 +163,7 @@ jobs:
         sudo mkdir -p /Deploy
         sudo chown $USER /Deploy
         cd /Deploy
+        export MalterlibCrashDumpDir="$PWD/CrashDumps"
         tar -xf "$ArtifactsPath"
         mv Tests* Tests
         cd Tests
