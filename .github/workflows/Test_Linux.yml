@@ -144,6 +144,7 @@ jobs:
       shell: bash
       run: |
         # To reproduce bug where getgrnam_r returns errors when user is not found
+        sudo apt update
         sudo apt install sssd
 
     - name: Run tests
