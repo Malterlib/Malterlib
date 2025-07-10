@@ -1,0 +1,40 @@
+{
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.exclude": {
+        "BuildSystem/SafeMib": true,
+        "External": true,
+        ".cache": true,
+        "Malterlib/Tool/Scripts/build": true,
+        "**/BuildSystem/last-build*": true,
+        "**/Binaries/**": true
+    },
+    "search.exclude": {
+        "BuildSystem/**/Files": true,
+        "*.sublime-workspace": true,
+        "**/IC/*": true,
+        "**/ImportCache/*": true,
+    },
+    "files.associations": {
+        "**/Include/**": "cpp"
+    },
+    "git.autoRepositoryDetection": "subFolders",
+    "git.repositoryScanMaxDepth": 5,
+    "clangd.path": "${workspaceFolder}/Binaries/MalterlibLLVM/HostPlatformArchitecture/bin/clangd",
+    "clangd.arguments": ["--query-driver=${workspaceFolder}/Binaries/MalterlibLLVM/HostPlatformArchitecture/bin/clang*", "--background-index"],
+    "lldb.displayFormat": "auto",
+    "lldb.showDisassembly": "auto",
+    "lldb.dereferencePointers": false,
+    "lldb.consoleMode": "commands",
+    //"lldb.library": "${workspaceRoot}/Binaries/MalterlibLLVM/macOS/arm64/lib/liblldb.dylib", // Path calculation not supported yet
+    "lldb.launch.initCommands": ["command source ${workspaceRoot}/.lldbinit"],
+    "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false,
+    "cmake.ctest.enabled": false,
+    "cmake.ignoreCMakeListsMissing": true,
+    "cmake.sourceDirectory": [],
+    "typescript.tsc.autoDetect": "off",
+    "search.useIgnoreFiles": false,
+}

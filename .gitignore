@@ -3,3 +3,5 @@
 /RepoLock.MRepoState
 /SDK
 *.sublime-workspace
+/.cache
+/compile_commands.json

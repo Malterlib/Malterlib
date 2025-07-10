@@ -1,0 +1,9 @@
+BasedOnStyle: Microsoft
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 190
+UseTab: ForIndentation
+ContinuationIndentWidth: 4
+MalterlibRules: true
+FixNamespaceComments: false
+QualifierAlignment: Right
