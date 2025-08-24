@@ -29,7 +29,7 @@
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": false,
     "lldb.consoleMode": "commands",
-    //"lldb.library": "${workspaceRoot}/Binaries/MalterlibLLVM/macOS/arm64/lib/liblldb.dylib", // Path calculation not supported yet
+    "lldb.launch.library": "${workspaceRoot}/Binaries/MalterlibLLVM/macOS/arm64/lib/liblldb.dylib",
     "lldb.launch.initCommands": ["command source ${workspaceRoot}/.lldbinit"],
     "cmake.configureOnOpen": false,
     "cmake.configureOnEdit": false,
