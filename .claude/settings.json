@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/ImportCache/**)",
+      "List(**/ImportCache/**)",
+      "Read(**/IC/**)",
+      "List(**/IC/**)"
+    ]
+  }
+}
