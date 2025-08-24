@@ -18,12 +18,13 @@
         "**/ImportCache/*": true,
     },
     "files.associations": {
-        "**/Include/**": "cpp"
+        "**/Include/**": "cpp",
+        "**/RootInclude/**": "cpp",
     },
     "git.autoRepositoryDetection": "subFolders",
     "git.repositoryScanMaxDepth": 5,
     "clangd.path": "${workspaceFolder}/Binaries/MalterlibLLVM/HostPlatformArchitecture/bin/clangd",
-    "clangd.arguments": ["--query-driver=${workspaceFolder}/Binaries/MalterlibLLVM/HostPlatformArchitecture/bin/clang*", "--background-index"],
+    "clangd.arguments": ["--background-index"],
     "lldb.displayFormat": "auto",
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": false,
