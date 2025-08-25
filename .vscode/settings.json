@@ -24,7 +24,7 @@
     "git.autoRepositoryDetection": "subFolders",
     "git.repositoryScanMaxDepth": 5,
     "clangd.path": "${workspaceFolder}/Binaries/MalterlibLLVM/HostPlatformArchitecture/bin/clangd",
-    "clangd.arguments": ["--background-index"],
+    "clangd.arguments": ["--background-index", "--use-dirty-headers"],
     "lldb.displayFormat": "auto",
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": false,
