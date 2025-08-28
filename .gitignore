@@ -8,3 +8,4 @@
 .DS_Store
 .git
 /AGENTS.md
+/.vscode/malterlib.local.json
