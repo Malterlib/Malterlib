@@ -7,5 +7,5 @@
 /compile_commands.json
 .DS_Store
 .git
-/AGENTS.md
 /.vscode/malterlib.local.json
+/.claude/*.local.json
