@@ -36,6 +36,10 @@ else
 	export EnableArchitecture_x64="true"
 	export EnableArchitecture_x86="false"
 	export EnableArchitecture_arm64="false"
+
+	export EnableDebugConfig="true"
+	export EnableReleaseConfig="true"
+	export EnableReleaseTestingConfig="true"
 fi
 
 mkdir -p "$CompiledFiles"

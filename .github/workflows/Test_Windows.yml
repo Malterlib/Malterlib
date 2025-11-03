@@ -12,9 +12,6 @@ on:
       configuration:
         required: true
         type: string
-      compiler:
-        required: true
-        type: string
 
 env:
   Malterlib_UseCachedEnvironment: "false"
@@ -36,7 +33,6 @@ env:
   MalterlibFlakyErrors: "Failed to replace local function with sanitizer version"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
-  MalterlibUseClangForWindowsConfigs: "true"
   MalterlibTestsMem_EnablePerfTests: "false"
   MalterlibLogCategoryWidth: "60"
   MalterlibConcurrency_DebugSubscriptions: "true"
@@ -48,7 +44,7 @@ env:
 
 jobs:
   build_windows:
-    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
+    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
     #runs-on: runner-windows-16core
     runs-on: self-hosted-windows-11-build
     timeout-minutes: 30
@@ -109,18 +105,18 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: (failure() || success())
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: |
           Artifacts
     - uses: actions/upload-artifact@v4
       if: (success() && (env.MalterlibDeploySymbols == 'true'))
       with:
-        name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
+        name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: |
           Symbols
 
   test_windows:
-    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
+    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
     runs-on: ${{ matrix.os }}
     needs: [build_windows]
     timeout-minutes: 70
@@ -131,7 +127,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: Artifacts
     - name: Disk space before
       shell: bash
@@ -190,7 +186,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
       with:
-        name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.compiler }}
+        name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: |
           Deploy/CrashDumps/MiniDump_*
           Deploy/CrashDumps/*.txt
