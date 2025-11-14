@@ -41,7 +41,6 @@ env:
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
   UBSAN_OPTIONS: "halt_on_error=1"
-  MalterlibXCBeautifyOptions: "--renderer github-actions --preserve-unbeautified"
 
 jobs:
   build_linux:
