@@ -38,5 +38,9 @@
     "cmake.ignoreCMakeListsMissing": true,
     "cmake.sourceDirectory": [],
     "typescript.tsc.autoDetect": "off",
+	"grunt.autoDetect": "off",
+	"jake.autoDetect": "off",
+	"gulp.autoDetect": "off",
+	"npm.autoDetect": "off",
     "search.useIgnoreFiles": false,
 }
