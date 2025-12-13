@@ -34,7 +34,7 @@ This repository contains the complete Malterlib framework source code, organized
 
 # Build tests
 ./mib generate Tests
-./mib build Tests macOS x86_64 Debug
+MalterlibBuildShowProgress=false ./mib build Tests macOS arm64 Debug
 ./mib test
 
 # Get help
@@ -62,7 +62,7 @@ Malterlib is a comprehensive C++ framework and build system that provides cross-
 - **mib** - The main build command located at `./mib` (shell script wrapper)
 - Uses custom `.MHeader`, `.MTarget`, `.MBuildSystem`, `.MRepo` files for configuration
 - Supports multiple platforms: macOS, Windows, Linux
-- Supports multiple architectures: x86_64, ARM64
+- Supports multiple architectures: arm64, x86, x86
 
 ### Common Build Commands
 
@@ -71,11 +71,12 @@ Malterlib is a comprehensive C++ framework and build system that provides cross-
 ./mib generate [WorkspaceName]
 
 # Build a workspace
-./mib build [WorkspaceName] [Platform] [Architecture] [Configuration]
-# Example: ./mib build Tests macOS x86_64 Debug
+MalterlibBuildShowProgress=false ./mib build [WorkspaceName] [Platform] [Architecture] [Configuration]
+# Example: ./mib build Tests macOS arm64 Debug
 
 # Build a specific target within a workspace
-./mib build_target [WorkspaceName] [TargetName] [Platform] [Architecture] [Configuration]
+MalterlibBuildShowProgress=false ./mib build_target [WorkspaceName] [TargetName] [Platform] [Architecture] [Configuration]
+# Example: ./mib build Tests Com_Test_Malterlib_Container macOS arm64 Debug
 
 # Build and run tests
 ./mib test [Configuration]  # Default is Debug
@@ -115,10 +116,22 @@ Malterlib is a comprehensive C++ framework and build system that provides cross-
 ./mib --help [CommandName]  # Detailed help for specific command
 ```
 
+Remember to use MalterlibBuildShowProgress=false when building so you don't get overwhelmed with uncessary output.
+
 ### Build Configurations
 - **Debug** - Debug build with assertions and debug symbols
 - **Release** - Optimized release build
 - **Release (Tests)** - Release build with test support
+
+### Build Platforms
+- **Windows** - Buildable on Windows host
+- **macOS** - Buildable on macOS host
+- **Linux** - Buildable on macOS host
+
+### Build Configurations
+- **arm64** - Supported on macOS, Linux and Windows
+- **x64** - Supported on macOS, Linux and Windows
+- **x86** - Only supported on Linux
 
 ## Framework Architecture
 
@@ -153,11 +166,11 @@ Located in `External/` directory:
 1. Place code in appropriate module directory under `Malterlib/`
 2. Update or create `.MHeader` files to include new targets
 3. Run `./mib generate` to regenerate build files
-4. Build with `./mib build [workspace]`
+4. Build with `MalterlibBuildShowProgress=false ./mib build [workspace]`
 
 ### Running Tests
 1. Generate test workspace: `./mib generate Tests`
-2. Build tests: `./mib build Tests [Platform] [Architecture] Debug`
+2. Build tests: `MalterlibBuildShowProgress=false ./mib build Tests [Platform] [Architecture] Debug`
 3. Run tests: `./mib test` or directly execute `RunAllTests` binary
 4. To run specific tests: `/opt/Deploy/Tests/RunAllTests --paths '["Module/Test/Name"]'`
 5. For continuous testing during development: build with Debug configuration for faster iteration
@@ -1093,7 +1106,7 @@ auto Result2 = NStr::fg_StrMatchWildcard("file123.doc", "file???.doc");
 ### Running Module Tests
 ```bash
 # Build tests
-./mib build Tests macOS x86_64 Debug
+MalterlibBuildShowProgress=false ./mib build Tests macOS arm64 Debug
 
 # Run all string tests
 /opt/Deploy/Tests/RunAllTests --paths '["String/*"]'
@@ -1639,7 +1652,7 @@ auto Version = Reg.f_GetString("Software/MyApp/Version");
 ### Running Module Tests
 ```bash
 # Build tests
-./mib build Tests macOS x86_64 Debug
+MalterlibBuildShowProgress=false ./mib build Tests macOS arm64 Debug
 
 # Run all container tests
 /opt/Deploy/Tests/RunAllTests --paths '["Container/*"]'
@@ -1987,7 +2000,7 @@ The module includes comprehensive tests in the `Test/` directory:
 
 Run tests with:
 ```bash
-./mib build Tests macOS x86_64 Debug
+MalterlibBuildShowProgress=false ./mib build Tests macOS arm64 Debug
 /opt/Deploy/Tests/RunAllTests --paths '["Malterlib/Encoding*"]'
 ```
 
@@ -2183,7 +2196,7 @@ public:
 	TCFuture<void> f_DoAsyncWork()
 	{
 		// Simulate async operation
-		co_await fg_Delay(0.1);
+		co_await fg_Timeout(0.1);
 		co_return {};
 	}
 
@@ -2389,12 +2402,12 @@ TCFuture<void> f_UseRemoteService()
 TCFuture<void> f_ParallelWork()
 {
 	// Get blocking actor for I/O operations
-	auto BlockingActor = fg_BlockingActor();
+	auto BlockingActorCheckout = fg_BlockingActor();
 
 	// Dispatch blocking operation
 	CStr FileContent = co_await
 		(
-			g_Dispatch(BlockingActor) / []() -> CStr
+			g_Dispatch(BlockingActorCheckout) / []() -> CStr
 			{
 				// This runs on thread pool, safe for blocking
 				return CFile::fs_ReadStringFromFile("/path/to/file");
@@ -2601,7 +2614,7 @@ TCFuture<void> f_Invalid(CStr const &_Str);
 // SAFE: Pass by value (preferred for all TCFuture coroutines)
 TCFuture<void> f_Safe(CStr _Str)
 {
-	co_await fg_Delay(1.0);
+	co_await fg_Timeout(1.0);
 	DConOut("{}\n", _Str); // Safe
 	co_return {};
 }
@@ -2609,7 +2622,7 @@ TCFuture<void> f_Safe(CStr _Str)
 // UNSAFE: Reference parameters after suspension
 TCUnsafeFuture<void> f_Unsafe(CStr const &_Str)
 {
-	co_await fg_Delay(1.0);
+	co_await fg_Timeout(1.0);
 	DConOut("{}\n", _Str); // _Str may be invalid!
 	co_return {};
 }
@@ -2618,7 +2631,7 @@ TCUnsafeFuture<void> f_Unsafe(CStr const &_Str)
 TCUnsafeFuture<void> f_SafeStore(CStr const &_Str)
 {
 	CStr Copy = _Str; // Store before suspension
-	co_await fg_Delay(1.0);
+	co_await fg_Timeout(1.0);
 	DConOut("{}\n", Copy); // Safe
 	co_return {};
 }
@@ -2635,9 +2648,10 @@ TCActor<CMyActor> Actor;
 co_await Actor(&CMyActor::f_SetValue, 5);
 
 // UNSAFE: Capturing 'this' in blocking dispatch
+auto BlockingActorCheckout = fg_BlockingActor();
 co_await
 	(
-		g_Dispatch(fg_BlockingActor()) / [this]()
+		g_Dispatch(BlockingActorCheckout) / [this]()
 		{
 			m_Value++; // Race condition!
 		}
@@ -2646,9 +2660,10 @@ co_await
 
 // SAFE: No shared state in blocking dispatch
 int32 LocalCopy = m_Value;
+auto BlockingActorCheckout = fg_BlockingActor();
 int32 Result = co_await
 	(
-		g_Dispatch(fg_BlockingActor()) / [LocalCopy]()
+		g_Dispatch(BlockingActorCheckout) / [LocalCopy]()
 		{
 			return LocalCopy + 1; // Safe
 		}
@@ -2678,9 +2693,10 @@ catch (NException::CException const &_Exception)
 }
 
 // INCORRECT: Wrong operator precedence with % and co_await
+auto BlockingActorCheckout = fg_BlockingActor();
 CStr Result = co_await
 	(
-		g_Dispatch(fg_BlockingActor()) / [Path]() -> CStr
+		g_Dispatch(BlockingActorCheckout) / [Path]() -> CStr
 		{
 			return CFile::fs_ReadStringFromFile(Path);
 		}
@@ -2688,9 +2704,10 @@ CStr Result = co_await
 ;
 
 // CORRECT: Parenthesize the % operator
+auto BlockingActorCheckout = fg_BlockingActor();
 CStr Result = co_await
 	(
-		g_Dispatch(fg_BlockingActor()) / [Path]() -> CStr
+		g_Dispatch(BlockingActorCheckout) / [Path]() -> CStr
 		{
 			return CFile::fs_ReadStringFromFile(Path);
 		}
@@ -2767,7 +2784,7 @@ TCAsyncGenerator<int32> f_GenerateNumbers()
 	for (int32 i = 0; i < 10; ++i)
 	{
 		co_yield i;
-		co_await fg_Delay(0.1);
+		co_await fg_Timeout(0.1);
 	}
 }
 
