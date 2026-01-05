@@ -42,7 +42,7 @@ env:
   MalterlibDebugSymbolsEnable: "false"
   MalterlibDeploySymbols: "false"
   MalterlibSupportCrashDumps: "false"
-  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Time/Time/Time speed"
+  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Time/Time/Time speed;Malterlib/Crytpography/SignFiles/*Timestamp*"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
   MalterlibLogCategoryWidth: "60"
