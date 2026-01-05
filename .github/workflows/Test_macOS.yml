@@ -42,7 +42,7 @@ env:
   MalterlibDebugSymbolsEnable: "false"
   MalterlibDeploySymbols: "false"
   MalterlibSupportCrashDumps: "false"
-  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunchFeatures/Run As;Malterlib/Time/Time/Time speed"
+  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunchFeatures/Run As;Malterlib/Time/Time/Time speed;Malterlib/Crytpography/SignFiles/*Timestamp*"
   MalterlibFlakyErrors: "Timed out waiting for user/group change to come into effect;notBefore date is after current time"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"

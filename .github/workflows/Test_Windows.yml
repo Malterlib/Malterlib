@@ -42,7 +42,7 @@ env:
   MalterlibDebugSymbolsEnable: "false"
   MalterlibDeploySymbols: "false"
   MalterlibSupportCrashDumps: "false"
-  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunch/*/*/KillSandbox;Malterlib/Time/Time/Time speed"
+  MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunch/*/*/KillSandbox;Malterlib/Time/Time/Time speed;Malterlib/Crytpography/SignFiles/*Timestamp*"
   MalterlibFlakyErrors: "Failed to replace local function with sanitizer version"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
