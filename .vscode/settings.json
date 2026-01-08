@@ -17,6 +17,7 @@
         "**/compile_commands.json": true,
         "**/IC/*": true,
         "**/ImportCache/*": true,
+        "**/ConfigStore/*": true,
     },
     "files.associations": {
         "**/Include/**": "cpp",
