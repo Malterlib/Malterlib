@@ -29,10 +29,8 @@ This repository contains the complete Malterlib framework source code, organized
 # Setup (macOS only)
 ./mib setup
 
-# Build tests
-./mib generate Tests
-MalterlibBuildShowProgress=false ./mib build Tests macOS arm64 Debug
-./mib test
+# Build and run tests
+MalterlibBuildShowProgress=false ./mib test
 
 # Get help
 ./mib --help
