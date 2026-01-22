@@ -35,6 +35,7 @@ env:
   MalterlibLogCategoryWidth: "60"
   MalterlibEnableBreakpad: "true"
   MalterlibConcurrency_DebugSubscriptions: "true"
+  MalterlibBuildShowProgress: "false"
   RunningCI: "true"
   MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
   MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
