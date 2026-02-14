@@ -30,7 +30,7 @@ env:
   MalterlibDeploySymbols: "false"
   MalterlibSupportCrashDumps: "false"
   MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunchFeatures/Run As;Malterlib/Time/Time/Time speed"
-  MalterlibFlakyErrors: "Timed out waiting for user/group change to come into effect"
+  MalterlibFlakyErrors: "Timed out waiting for user/group change to come into effect;notBefore date is after current time"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
   MalterlibLogCategoryWidth: "60"
