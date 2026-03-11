@@ -39,7 +39,7 @@
     "cmake.ctest.enabled": false,
     "cmake.ignoreCMakeListsMissing": true,
     "cmake.sourceDirectory": [],
-    "typescript.tsc.autoDetect": "off",
+	"js/ts.tsc.autoDetect": "off",
 	"grunt.autoDetect": "off",
 	"jake.autoDetect": "off",
 	"gulp.autoDetect": "off",

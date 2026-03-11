@@ -41,8 +41,7 @@ Property
 		!!Malterlib_AssumeMalterlibHost undefined
 	}
 
-	MalterlibModules =+ "Tool"
-	MalterlibModules =+ "Git"
+	MalterlibEnableOptonalModules true
 
 	MalterlibEnableThirdPartyComparisonTests true
 	{

@@ -16,7 +16,7 @@ The Core module documentation serves as the central reference point for:
 
 ## Repository-Specific Information
 
-**Do not use git worktrees** in this repository. The codebase is organized as sub-repositories under `Malterlib/`, and worktrees do not work correctly with this structure.
+Git worktrees are supported by `mib`, but avoid them for agent-driven workflows in this repository. The codebase is organized as sub-repositories under `Malterlib/`, so agent edits often land inside those sub-repositories and later sync or publish steps from the top-level worktree will not behave correctly. Detached `HEAD` checkouts are also unsupported for bootstrap and `./mib update-repos`, because sub-repositories are synchronized against named branches.
 
 This repository contains the complete Malterlib framework source code, organized as follows:
 

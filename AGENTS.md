@@ -19,7 +19,7 @@ The Core module documentation serves as the central reference point for:
 
 ## Repository-Specific Information
 
-**Do not use git worktrees** in this repository. The codebase is organized as sub-repositories under `Malterlib/`, and worktrees do not work correctly with this structure.
+Git worktrees are supported by `mib`, but avoid them for agent-driven workflows in this repository. The codebase is organized as sub-repositories under `Malterlib/`, so agent edits often land inside those sub-repositories and later sync or publish steps from the top-level worktree will not behave correctly. Detached `HEAD` checkouts are also unsupported for bootstrap and `./mib update-repos`, because sub-repositories are synchronized against named branches.
 
 This repository contains the complete Malterlib framework source code, organized as follows:
 
@@ -64,6 +64,16 @@ Malterlib is a comprehensive C++ framework and build system that provides cross-
 - Supports multiple platforms: macOS, Windows, Linux
 - Supports multiple architectures: arm64, x86, x86
 
+### Shell Setup
+
+Before running any commands, enable pipefail so that piped commands propagate failure exit codes correctly:
+
+```bash
+set -o pipefail
+```
+
+Without this, piping output through `tail`, `head`, etc. will hide non-zero exit codes from the original command.
+
 ### Common Build Commands
 
 ```bash
@@ -75,14 +85,14 @@ MalterlibBuildShowProgress=false ./mib build WorkspaceName [Platform] [Architect
 # Example: ./mib build Tests
 
 # Generate and build a specific target within a workspace
-MalterlibBuildShowProgress=false ./mib build_target WorkspaceName TargetName [Platform] [Architecture] [Configuration]
+MalterlibBuildShowProgress=false ./mib build-target WorkspaceName TargetName [Platform] [Architecture] [Configuration]
 # Example: ./mib build Tests Com_Test_Malterlib_Container
 
 # Generate, build and run tests
 MalterlibBuildShowProgress=false ./mib test
 
 # Update repositories
-./mib update_repos
+./mib update-repos
 
 # Get repository status
 ./mib status
@@ -173,9 +183,11 @@ Located in `External/` directory:
 
 ### Repository Management
 - Check status: `./mib status`
-- Update all repos: `./mib update_repos`
+- Update all repos: `./mib update-repos`
 - Switch branch: `./mib branch [BranchName]`
 - Push changes: `./mib push`
+- `mib` supports git worktrees, but avoid them for agent-driven workflows in this repository. Many changes land inside the `Malterlib/*` sub-repositories, and syncing those changes back from the top-level worktree does not behave correctly.
+- Keep the main repository on a named branch when bootstrapping or running `./mib update-repos`. Detached `HEAD` checkouts are intentionally unsupported because sub-repositories are synchronized against the main branch.
 - The system uses git LFS for binary dependencies - ensure it's installed
 - Many directories under `Malterlib/` are separate Git repositories. When checking status or searching history, run Git commands inside the relevant subdirectory (`Malterlib/Concurrency`, `Malterlib/Cloud`, etc.) or use the helper scripts (`./mib git ...`) that fan out across sub-repos.
 
@@ -259,6 +271,14 @@ auto Value = fg_Function
 ```
 
 ```cpp
+fg_Function
+	(
+		5
+	)
+;
+```
+
+```cpp
 (
 	[&]
 	{
@@ -281,8 +301,8 @@ auto Value = fg_Function
 - `fp_`: Private/protected member function
 - `fs_`: Static member function
 - `fsp_`: Private/protected static member function
-- `fg_`: Global function
-- `fsg_`: Static global function
+- `fg_`: Global function (also used in anonymous namespaces)
+- `fsg_`: Static global function (only when explicitly declared `static`, not for anonymous namespaces)
 
 #### Parameter Prefixes
 - `_`: Standard function parameter
@@ -297,9 +317,9 @@ auto Value = fg_Function
 - No prefix for local variables
 - `c_`: Compile-time constant local variables
 - `s_`: Static local variables
-- `g_`: Global variables
-- `gc_`: Compile-time constant global variables
-- `gs_`: Static global variables
+- `g_`: Global variables (also used in anonymous namespaces)
+- `gc_`: Compile-time constant global variables (also used in anonymous namespaces)
+- `gs_`: Static global variables (only when explicitly declared `static`, not for anonymous namespaces)
 - `m_`: Member variables
 - `mc_`: Compile-time constant member variables
 - `ms_`: Static member variables
@@ -333,7 +353,7 @@ auto Value = fg_Function
 - The project uses custom memory management with configurable allocators
 - LFS (Large File Storage) is used for binary dependencies
 - The build system caches environment and dependency information in `BuildSystem/Default/`
-- When switching branches, run `./mib update_repos` to ensure all repositories are synchronized
+- When switching branches, run `./mib update-repos` to ensure all repositories are synchronized
 - The mib script automatically bootstraps required tools on first use
 - **Bit utilities**: `fg_GetHighestBitSet(x)` safely handles `x == 0` (returns a defined value). `fg_GetHighestBitSetNoZero(x)` is the faster variant that requires `x != 0` — passing 0 is undefined behavior. Use `fg_GetHighestBitSet` when zero is a possible input; use `fg_GetHighestBitSetNoZero` only when zero has been excluded by a prior check.
 
@@ -541,25 +561,24 @@ Type-safe enum class operators:
 // Define an enum with operators
 enum class EMyFlags : uint32
 {
-	ENone = 0,
-	EFlag1 = 1 << 0,
-	EFlag2 = 1 << 1,
-	EFlag3 = 1 << 2
+	mc_None = 0,
+	, mc_Flag1 = DMibBit(0)
+	, mc_Flag2 = DMibBit(1)
+	, mc_Flag3 = DMibBit(2)
 };
-DMibEnumOperators(EMyFlags);
 
 // Use enum operators
 void fg_UseFlags()
 {
-	EMyFlags nFlags = EMyFlags::EFlag1 | EMyFlags::EFlag2;
+	EMyFlags Flags = EMyFlags::mc_Flag1 | EMyFlags::mc_Flag2;
 
-	if (nFlags & EMyFlags::EFlag1)
+	if (fg_IsSet(Flags, EMyFlags::mc_Flag1))
 	{
 		// Flag1 is set
 		fg_ProcessFlag1();
 	}
 
-	nFlags &= ~EMyFlags::EFlag2;  // Clear Flag2
+	nFlags &= ~EMyFlags::mc_Flag2;  // Clear Flag2
 }
 ```
 
@@ -880,6 +899,7 @@ Since Core is the foundation of Malterlib, here are references to all module-spe
 - **Numeric**: `../Numeric/CLAUDE.md` - Numerical operations and math
 - **Process**: `../Process/CLAUDE.md` - Process management and IPC
 - **Stream**: `../Stream/CLAUDE.md` - Stream processing and I/O
+- **Test**: `../Test/CLAUDE.md` - Test framework usage and test-writing conventions
 - **Time**: `../Time/CLAUDE.md` - Time and date utilities
 - **Web**: `../Web/CLAUDE.md` - Web server and HTTP handling
 
@@ -2655,7 +2675,7 @@ TCFuture<void> f_Process(CStr _Key)
 ```
 
 - Use the `fg_AsyncDestroy` helper instead of manual `g_OnScopeExit` plumbing when an actor/functor needs structured teardown.
-- Schedule the helper before the first suspension and capture by reference — the functor runs while the coroutine frame is still alive, so moving the resource into the co-routine frame. After the first suspension of the cleanup function the references will be invalid.
+- Schedule the helper before the first suspension and capture by reference only while the cleanup body stays before its first real suspension. `co_await ECoroutineFlag_CaptureExceptions` does not suspend, so captured references are still safe across that await. After the first actual suspension point of the cleanup function the references WILL be invalid, so copy or move anything needed into locals before that point.
 - These helpers schedule destruction on the owning actor.
 - Pair `fg_OnResume` with any pointer captures when the coroutine is going to suspend before dereferencing actor-owned data. While the coroutine is cancelled if the actor dies, other actor calls can mutate or erase those structures during the suspension, so re-validation on resume avoids stale references.
 
