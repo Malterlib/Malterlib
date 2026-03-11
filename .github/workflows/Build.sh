@@ -65,7 +65,7 @@ export MalterlibDependenciesDirectory="`MalterlibConvertPath \"$CompiledFiles/De
 export MalterlibCompiledFiles="`MalterlibConvertPath \"$CompiledFiles/\"`"
 
 echo ${SECONDS}s
-./mib update_repos
+./mib update-repos
 
 df -h
 
