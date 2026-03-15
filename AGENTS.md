@@ -19,6 +19,8 @@ The Core module documentation serves as the central reference point for:
 
 ## Repository-Specific Information
 
+**Do not use git worktrees** in this repository. The codebase is organized as sub-repositories under `Malterlib/`, and worktrees do not work correctly with this structure.
+
 This repository contains the complete Malterlib framework source code, organized as follows:
 
 ### Directory Structure
@@ -167,6 +169,7 @@ Located in `External/` directory:
 1. Build and run tests: `./mib test`
 2. To run specific tests: `/opt/Deploy/Tests/RunAllTests --paths '["Module/Test/Name"]'`
 3. Build and run specific tests: `./mib test --paths '["Module/Test/Name"]'`
+4. **Checking test results**: Test success is determined solely by exit code 0. Do not try to grep or parse the test output for PASS/FAIL strings — the Bash tool already reports the exit code directly. If the command exits with 0, all tests passed.
 
 ### Repository Management
 - Check status: `./mib status`
@@ -214,8 +217,58 @@ Generate a workspace before building: `./mib generate [WorkspaceName]`
 
 #### Statement Splitting
 - Each substatement on the same logical level goes on its own line
+- When a condition or expression is split across lines, put each logical unit on its own line
+- Matching `(` and `)` in a split construct stay at the same indentation level
 - Scope markers must be on separate lines
 - Complex statements should be broken down for readability
+- Continuation indentation depends on whether the current statement or expression may be extended afterward
+- If it may be extended afterward, indent the continued part one extra level
+- If it may not be extended afterward, do not add the extra continuation indent
+- Exception: if the statement itself starts with `(`, keep that `(` at the statement indentation level instead of adding a continuation indent
+- If a function declaration or definition is split to fit the line length, first convert it to trailing return type
+- If it still does not fit, put the trailing return type on its own line; do not put the return type on a separate line before the function name
+- When control-flow conditions such as `if` are split across lines, use braces even for a single statement to keep the structure clear
+- When a split statement, expression, or declaration ends with `;`, put the `;` on its own line at the statement indentation level
+
+```cpp
+if
+(
+	Condition
+)
+{
+	Statement();
+}
+```
+
+```cpp
+auto fg_Function
+	(
+		int _Param
+	)
+	-> void
+;
+```
+
+```cpp
+auto Value = fg_Function
+	(
+		5
+	)
+	+ 6
+;
+```
+
+```cpp
+(
+	[&]
+	{
+		f_DoWork();
+		return true;
+	}
+	()
+	, ...
+);
+```
 
 ### Naming Conventions
 
@@ -272,6 +325,7 @@ Generate a workspace before building: `./mib generate [WorkspaceName]`
 
 ## Important Framework Notes
 
+- `mint` is an unsigned integer type sized for memory/count/index use on the target platform. Its signed counterpart is `smint`, while `aint` is a separate signed arithmetic/result type and should not be treated as the signed form of `mint`.
 - The build system uses absolute paths by default
 - Build artifacts are placed in `/opt/Deploy/`, `/Deploy/` or `/c/Deploy/` depending on the OS and `BuildSystem/Default/PostCopy.MConfig`
 - The system supports cross-compilation for multiple platforms

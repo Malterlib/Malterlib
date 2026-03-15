@@ -16,6 +16,8 @@ The Core module documentation serves as the central reference point for:
 
 ## Repository-Specific Information
 
+**Do not use git worktrees** in this repository. The codebase is organized as sub-repositories under `Malterlib/`, and worktrees do not work correctly with this structure.
+
 This repository contains the complete Malterlib framework source code, organized as follows:
 
 ### Directory Structure
