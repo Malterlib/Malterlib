@@ -325,7 +325,7 @@ auto Value = fg_Function
 
 ## Important Framework Notes
 
-- `mint` is an unsigned integer type sized for memory/count/index use on the target platform. Its signed counterpart is `smint`, while `aint` is a separate signed arithmetic/result type and should not be treated as the signed form of `mint`.
+- `umint` (or memory integer) is an unsigned integer type sized for memory/count/index use on the target platform. Its signed counterpart is `smint`, while `aint` is a separate signed arithmetic/result type and should not be treated as the signed form of `umint`.
 - The build system uses absolute paths by default
 - Build artifacts are placed in `/opt/Deploy/`, `/Deploy/` or `/c/Deploy/` depending on the OS and `BuildSystem/Default/PostCopy.MConfig`
 - The system supports cross-compilation for multiple platforms
@@ -335,6 +335,7 @@ auto Value = fg_Function
 - The build system caches environment and dependency information in `BuildSystem/Default/`
 - When switching branches, run `./mib update_repos` to ensure all repositories are synchronized
 - The mib script automatically bootstraps required tools on first use
+- **Bit utilities**: `fg_GetHighestBitSet(x)` safely handles `x == 0` (returns a defined value). `fg_GetHighestBitSetNoZero(x)` is the faster variant that requires `x != 0` — passing 0 is undefined behavior. Use `fg_GetHighestBitSet` when zero is a possible input; use `fg_GetHighestBitSetNoZero` only when zero has been excluded by a prior check.
 
 ## Core Module Overview
 
@@ -1004,8 +1005,8 @@ struct TCStr {
 template <typename t_CStrTraits>
 struct TCStrImp_Dynamic {
     ch8* m_pData;
-    mint m_Capacity;
-    mint m_Length;
+    umint m_Capacity;
+    umint m_Length;
 };
 ```
 
@@ -1639,9 +1640,9 @@ The Container module provides high-performance, STL-compatible container classes
 ### Vector Implementation
 ```cpp
 // Configurable vector options
-template <mint t_MinSize, bool t_bShrink, bool t_bCheckBounds>
+template <umint t_MinSize, bool t_bShrink, bool t_bCheckBounds>
 struct TCVectorOptions {
-    static constexpr mint mc_MinSize = t_MinSize;        // Minimum allocation
+    static constexpr umint mc_MinSize = t_MinSize;        // Minimum allocation
     static constexpr bool mc_bShrink = t_bShrink;        // Auto-shrink on remove
     static constexpr bool mc_bCheckBounds = t_bCheckBounds; // Bounds checking
 };
