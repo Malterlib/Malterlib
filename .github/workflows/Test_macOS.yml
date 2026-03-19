@@ -54,7 +54,7 @@ jobs:
       BuildArchitecture: ${{ inputs.architecture }}
       BuildConfiguration: ${{ inputs.configuration }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         lfs: 'true'
         clean: false
@@ -64,7 +64,7 @@ jobs:
       run: |
         set -e
         ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
@@ -81,7 +81,7 @@ jobs:
         #os: [macos-11, macos-12, macos-13, macos-14]
         os: [self-hosted-macos-11, self-hosted-macos-12, self-hosted-macos-13, self-hosted-macos-14, self-hosted-macos-15, self-hosted-macos-26]
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: Artifacts

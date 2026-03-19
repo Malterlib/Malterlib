@@ -59,7 +59,7 @@ jobs:
         git config --global core.autocrlf false
         git config --global core.eol lf
         git config --global core.symlinks true
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         lfs: 'true'
         clean: false
@@ -103,13 +103,13 @@ jobs:
         set -e
         git reset --hard
         ./.github/workflows/Build.sh
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: |
           Artifacts
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: (success() && (env.MalterlibDeploySymbols == 'true'))
       with:
         name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
@@ -126,7 +126,7 @@ jobs:
       matrix:
         os: [windows-2022, windows-2025]
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: Artifacts
@@ -184,7 +184,7 @@ jobs:
       env:
         MatrixOs: ${{ matrix.os }}
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
       with:
         name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
