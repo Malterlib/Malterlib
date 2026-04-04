@@ -5,6 +5,7 @@
     "files.insertFinalNewline": true,
     "files.exclude": {
         "BuildSystem/SafeMib": true,
+        "BuildSystem/LastBuild": true,
         "External": true,
         ".cache": true,
         "Malterlib/Tool/Scripts/build": true,
