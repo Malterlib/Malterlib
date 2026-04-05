@@ -1,3 +1,6 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 set -ex
 
 cd `dirname ${BASH_SOURCE[0]}`

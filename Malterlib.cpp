@@ -1,4 +1,4 @@
-// Copyright © 2024 Favro Holding AB
-// Distributed under the MIT license, see license text in LICENSE.Malterlib
+// Copyright © Unbroken AB
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // File to allow linguist to detect language as C++ on GitHub

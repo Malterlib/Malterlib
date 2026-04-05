@@ -1,5 +1,5 @@
-// Copyright © 2015 Hansoft AB
-// Distributed under the MIT license, see license text in LICENSE.Malterlib
+// Copyright © Unbroken AB
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Import all roots
 Import "Malterlib/Core/Malterlib.MHeader"
@@ -54,6 +54,41 @@ Property
 Import.CMake_VerboseHash true
 {
 	!!MalterlibVerboseCMakeHash true
+}
+
+Repository
+{
+	!!Repository.Type "Root"
+
+	License MalterlibRepoDefaultLicenseConfig
+	{
+		!!Repository.License undefined
+	}
+
+	CheckLicense true
+	{
+		!!Repository.CheckLicense undefined
+	}
+
+	License #<CommentStyles> =+ {
+		Path: ["count-lines"]
+		, LinePrefix: "# "
+		, DetectShebang: true
+	}
+
+	License #<CommentStyles> =+ {
+		Path: ["mib"]
+		, LinePrefix: "# "
+		, DetectShebang: true
+	}
+
+	MalterlibRepoReusePaths =+ [
+		".claude/*.json"
+		, ".vscode/*.json"
+		, ".ignore"
+		, ".rgignore"
+		, "Malterlib.sublime-project"
+	]
 }
 
 %Target "AllFiles"

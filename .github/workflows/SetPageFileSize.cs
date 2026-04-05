@@ -1,3 +1,6 @@
+// Copyright © Unbroken AB
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // https://referencesource.microsoft.com/#System.IdentityModel/System/IdentityModel/NativeMethods.cs,619688d876febbe1
 // https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/mm/modwrite/create.htm
 // https://referencesource.microsoft.com/#mscorlib/microsoft/win32/safehandles/safefilehandle.cs,9b08210f3be75520
