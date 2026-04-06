@@ -85,10 +85,15 @@ jobs:
         os: [self-hosted-macos-12, self-hosted-macos-13, self-hosted-macos-14, self-hosted-macos-15, self-hosted-macos-26]
     steps:
     - uses: actions/download-artifact@v8
+      # TSAN and ASAN are broken on macOS 26
+      if: (!(matrix.os == 'self-hosted-macos-26' && (inputs.configuration == 'Release (TSan Tests)' || inputs.configuration == 'Release (ASan Tests)')))
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
         path: Artifacts
     - name: Run tests
+      # TSAN and ASAN are broken on macOS 26
+      if: (!(matrix.os == 'self-hosted-macos-26' && (inputs.configuration == 'Release (TSan Tests)' || inputs.configuration == 'Release (ASan Tests)')))
+
       shell: bash
       run: |
         if ! which gtar; then
