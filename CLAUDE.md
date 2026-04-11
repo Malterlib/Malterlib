@@ -1,6 +1,4 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# AI instructions
 
 ## Malterlib Framework Documentation
 
@@ -37,10 +35,3 @@ MalterlibBuildShowProgress=false ./mib test
 # Get help
 ./mib --help
 ```
-
-## For External Projects
-
-When using Malterlib in external projects, reference:
-- `Malterlib/Core/CLAUDE.md` - Complete framework documentation and all module links
-
-This single reference provides access to the entire documentation hierarchy.
