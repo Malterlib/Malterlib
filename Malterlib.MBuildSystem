@@ -1,7 +1,6 @@
 // Copyright © Unbroken AB
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Import all roots
 Import "Malterlib/Core/Malterlib.MHeader"
 
 Property
@@ -89,42 +88,4 @@ Repository
 		, ".rgignore"
 		, "Malterlib.sublime-project"
 	]
-}
-
-%Target "AllFiles"
-{
-	Target
-	{
-		Type "Tool"
-		BaseFileName "AllFiles"
-		Name "AllFiles"
-	}
-	Property
-	{
-		ExcludeFiles += ["*/.meteor/local", "*/.DS_Store", "*/.build.*", "*/.git", "*/node_modules", "*/.babel-cache", "*.ts-build", "*/vendor/bundle"]
-		ExcludeFiles += ["BuildSystem"->MakeAbsolute()]
-		ExcludeFiles += ["External/meteor/dev_bundle"->MakeAbsolute()]
-		ExcludeFiles += ["External/meteor/.meteor"->MakeAbsolute()]
-		ExcludeFiles += ["Binaries"->MakeAbsolute()]
-		ExcludeFiles += [">"] // Don't follow links
-	}
-
-	%File "^*"
-}
-
-Property
-{
-	MalterlibEnableAllFilesWorkspace: bool = false // User(Build System)=true: Enable all files workspace
-}
-
-%Workspace "AllFiles"
-{
-	&
-	{
-		Platform HostPlatform
-		Configuration "Debug"
-		MalterlibEnableAllFilesWorkspace true
-	}
-	Property.EnableTestConfigs false
-	%Target "AllFiles"
 }
