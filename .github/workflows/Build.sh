@@ -70,6 +70,9 @@ export MalterlibCompiledFiles="`MalterlibConvertPath \"$CompiledFiles/\"`"
 echo ${SECONDS}s
 ./mib update-repos
 
+# Fail build is licensing is wrong
+./mib check-license
+
 df -h
 
 MalterlibDeployRoot="`MalterlibConvertPath \"$Deploy\"`"
