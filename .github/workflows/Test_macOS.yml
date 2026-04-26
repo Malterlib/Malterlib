@@ -15,6 +15,16 @@ on:
       configuration:
         required: true
         type: string
+      sanitizer:
+        required: false
+        type: string
+        default: 'None'
+      display_name:
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 env:
   Malterlib_UseCachedEnvironment: "false"
@@ -26,7 +36,7 @@ env:
   MalterlibEnableLinkTimeCodeGeneration: "false"
   MalterlibImportUpdateCache: "false"
   MalterlibBuildLogFile: "Artifacts/Build.log"
-  MalterlibEnableSanitizerReleaseConfigs: "true"
+  MalterlibEnableSanitizerReleaseConfigs: "false"
   MalterlibEnablePrefTestConfig: "false"
   MalterlibEnableInternalTests: "true"
   MalterlibDebugSymbolsEnable: "false"
@@ -41,27 +51,49 @@ env:
   MalterlibConcurrency_DebugSubscriptions: "true"
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
-  MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
-  MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
   UBSAN_OPTIONS: "halt_on_error=1"
 
 jobs:
-  build_mac:
-    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
-    runs-on: self-hosted-mac-build-x64
+  build:
+    name: Build
+    runs-on: ${{ inputs.architecture == 'arm64' && 'macos-26' || 'macos-26-intel' }}
     timeout-minutes: 120
     env:
       BuildPlatform: ${{ inputs.platform }}
       BuildArchitecture: ${{ inputs.architecture }}
       BuildConfiguration: ${{ inputs.configuration }}
+      BuildSanitizer: ${{ inputs.sanitizer }}
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
     - uses: actions/checkout@v6
       with:
         lfs: 'true'
         clean: false
-        persist-credentials: false
+        persist-credentials: true
+    - name: Configure PR checkout
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: |
+        git checkout -B "github-pr-${{ github.event.pull_request.number }}"
+        git config --global --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
+        git config --global --add remote.origin.fetch '+refs/pull/*/merge:refs/remotes/origin/pull/*/merge'
+    - name: Cache binary repositories
+      uses: actions/cache/restore@v5
+      with:
+        path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
+        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture)) }}
+        restore-keys: |
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-
+    - name: Restore llvm-project
+      uses: actions/cache/restore@v5
+      with:
+        path: External/llvm-project
+        key: malterlib-llvm-project-v2-${{ hashFiles('.github/repository-cache/External-llvm-project.MRepo') }}
+        restore-keys: |
+          malterlib-llvm-project-v2-
+        enableCrossOsArchive: true
     - name: Build
       shell: bash
       run: |
@@ -70,29 +102,28 @@ jobs:
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
 
   test_mac:
-    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+    name: Test ${{ matrix.display_os }}
     runs-on: ${{ matrix.os }}
-    needs: [build_mac]
+    needs: [build]
     timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
-        #os: [macos-11, macos-12, macos-13, macos-14]
-        os: [self-hosted-macos-12, self-hosted-macos-13, self-hosted-macos-14, self-hosted-macos-15, self-hosted-macos-26]
+        include: ${{ fromJSON(inputs.architecture == 'arm64' && '[{"os":"macos-14","display_os":"14"},{"os":"macos-15","display_os":"15"},{"os":"macos-26","display_os":"26"}]' || '[{"os":"macos-15-intel","display_os":"15"},{"os":"macos-26-intel","display_os":"26"}]') }}
     steps:
     - uses: actions/download-artifact@v8
       # TSAN and ASAN are broken on macOS 26
-      if: (!(matrix.os == 'self-hosted-macos-26' && (inputs.configuration == 'Release (TSan Tests)' || inputs.configuration == 'Release (ASan Tests)')))
+      if: (!(startsWith(matrix.os, 'macos-26') && (inputs.sanitizer == 'Thread' || inputs.sanitizer == 'Address')))
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
     - name: Run tests
       # TSAN and ASAN are broken on macOS 26
-      if: (!(matrix.os == 'self-hosted-macos-26' && (inputs.configuration == 'Release (TSan Tests)' || inputs.configuration == 'Release (ASan Tests)')))
+      if: (!(startsWith(matrix.os, 'macos-26') && (inputs.sanitizer == 'Thread' || inputs.sanitizer == 'Address')))
 
       shell: bash
       run: |

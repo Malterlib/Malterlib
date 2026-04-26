@@ -89,3 +89,44 @@ Repository
 		, "Malterlib.sublime-project"
 	]
 }
+
+Repository
+{
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinaries-Linux-arm64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/Malterlib/Linux/arm64"->MakeAbsolute()
+	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinaries-Linux-x64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/Malterlib/Linux/x64"->MakeAbsolute()
+	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinaries-Windows-arm64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/Malterlib/Windows/arm64"->MakeAbsolute()
+	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinaries-Windows-x64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/Malterlib/Windows/x64"->MakeAbsolute()
+	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinaries-macOS-arm64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/Malterlib/macOS/arm64"->MakeAbsolute()
+	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinaries-macOS-x64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/Malterlib/macOS/x64"->MakeAbsolute()
+	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinariesSDK-Linux-Ubuntu-arm64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/MalterlibSDK/Linux/Ubuntu/arm64"->MakeAbsolute()
+	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinariesSDK-Linux-Ubuntu-x64.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/MalterlibSDK/Linux/Ubuntu/x64"->MakeAbsolute()
+	}
+
+	AdditionalConfigFiles =+ ".github/repository-cache/External-llvm-project.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "External/llvm-project"->MakeAbsolute()
+	}
+}

@@ -15,6 +15,16 @@ on:
       configuration:
         required: true
         type: string
+      sanitizer:
+        required: false
+        type: string
+        default: 'None'
+      display_name:
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 env:
   Malterlib_UseCachedEnvironment: "false"
@@ -26,7 +36,7 @@ env:
   MalterlibEnableLinkTimeCodeGeneration: "false"
   MalterlibImportUpdateCache: "false"
   MalterlibBuildLogFile: "Artifacts/Build.log"
-  MalterlibEnableSanitizerReleaseConfigs: "true"
+  MalterlibEnableSanitizerReleaseConfigs: "false"
   MalterlibEnablePrefTestConfig: "false"
   MalterlibEnableInternalTests: "true"
   MalterlibDebugSymbolsEnable: "false"
@@ -40,27 +50,165 @@ env:
   MalterlibConcurrency_DebugSubscriptions: "true"
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
-  MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
-  MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
+  MinimumBuildDiskSpaceGb: "60"
+  MinimumWorkspaceDiskSpaceGb: "20"
+  MaximizeDiskSpaceDirectories: "/usr/local/lib/android /usr/share/swift /usr/local/share/powershell /usr/lib/jvm /opt/az /usr/lib/llvm-* /usr/share/miniconda /usr/local/julia* /opt/microsoft/msedge /usr/lib/dotnet /usr/share/az_* /usr/lib/firefox /opt/microsoft/powershell /usr/share/gradle-* /usr/share/kotlinc /opt/ghc /opt/hostedtoolcache/CodeQL"
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
   UBSAN_OPTIONS: "halt_on_error=1"
 
 jobs:
-  build_linux:
-    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
-    runs-on: self-hosted-mac-build-x64
+  build:
+    name: Build
+    runs-on: ${{ inputs.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 120
     env:
       BuildPlatform: ${{ inputs.platform }}
       BuildArchitecture: ${{ inputs.architecture }}
       BuildConfiguration: ${{ inputs.configuration }}
+      BuildSanitizer: ${{ inputs.sanitizer }}
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
+    - name: Check disk space
+      id: disk_space
+      shell: bash
+      run: |
+        df -h --sync
+        AvailableKb=0
+        AvailableMount=""
+        while read -r Filesystem Blocks Used Available Capacity Mount; do
+          if [[ "$Filesystem" == "Filesystem" ]]; then
+            continue
+          fi
+          case "$Filesystem" in
+            tmpfs|devtmpfs|efivarfs)
+              continue
+              ;;
+          esac
+          case "$Mount" in
+            /dev|/dev/*|/proc|/proc/*|/run|/run/*|/sys|/sys/*)
+              continue
+              ;;
+          esac
+          if [[ ! "$Available" =~ ^[0-9]+$ ]]; then
+            continue
+          fi
+          if (( Available > AvailableKb )); then
+            AvailableKb="$Available"
+            AvailableMount="$Mount"
+          fi
+        done < <(df -Pk --sync)
+        if [[ -z "$AvailableMount" ]]; then
+          AvailableMount="/"
+          while read -r Filesystem Blocks Used Available Capacity Mount; do
+            if [[ "$Filesystem" == "Filesystem" ]]; then
+              continue
+            fi
+            AvailableKb="$Available"
+            break
+          done < <(df -Pk --sync /)
+        fi
+        mkdir -p "$GITHUB_WORKSPACE"
+        WorkspaceAvailableKb=0
+        WorkspaceMount=""
+        while read -r Filesystem Blocks Used Available Capacity Mount; do
+          if [[ "$Filesystem" == "Filesystem" ]]; then
+            continue
+          fi
+          WorkspaceAvailableKb="$Available"
+          WorkspaceMount="$Mount"
+          break
+        done < <(df -Pk --sync "$GITHUB_WORKSPACE")
+        MinimumKb=$((MinimumBuildDiskSpaceGb * 1024 * 1024))
+        MinimumWorkspaceKb=$((MinimumWorkspaceDiskSpaceGb * 1024 * 1024))
+        echo "Largest available disk: ${AvailableMount} with ${AvailableKb}K"
+        echo "Minimum largest disk space: ${MinimumKb}K"
+        echo "Workspace disk: ${WorkspaceMount} with ${WorkspaceAvailableKb}K"
+        echo "Minimum workspace disk space: ${MinimumWorkspaceKb}K"
+        echo "best_mount=${AvailableMount}" >> "$GITHUB_OUTPUT"
+        if (( AvailableKb < MinimumKb || WorkspaceAvailableKb < MinimumWorkspaceKb )); then
+          echo "low_space=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "low_space=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Setup compressed storage
+      if: steps.disk_space.outputs.low_space == 'true'
+      shell: bash
+      run: |
+        if ! command -v mkfs.btrfs >/dev/null 2>&1; then
+          sudo apt-get update
+          sudo apt-get install --yes btrfs-progs
+          sudo rm -rf /var/lib/apt/lists/*
+        fi
+        BestMount="${{ steps.disk_space.outputs.best_mount }}"
+        if [[ -z "$BestMount" || "$BestMount" == "/" ]]; then
+          CompressedStorageRoot="${RUNNER_TEMP%/}"
+        else
+          CompressedStorageRoot="${BestMount%/}/MalterlibCompressedStorage"
+          sudo mkdir -p "$CompressedStorageRoot"
+          sudo chown "$USER" "$CompressedStorageRoot"
+        fi
+        mkdir -p "$CompressedStorageRoot"
+        CompressedDisk="$CompressedStorageRoot/MalterlibWorkspace.btrfs"
+        sudo truncate "$CompressedDisk" -s 40G
+        sudo mkfs.btrfs -q "$CompressedDisk"
+        sudo mkdir -p "$GITHUB_WORKSPACE"
+        sudo mount -o compress-force=zstd:3 "$CompressedDisk" "$GITHUB_WORKSPACE"
+        sudo chown "$USER" "$GITHUB_WORKSPACE"
+        BuildScratchRoot="$GITHUB_WORKSPACE/MalterlibBuild"
+        mkdir -p "$BuildScratchRoot"
+        echo "MalterlibBuildScratchRoot=$BuildScratchRoot" >> "$GITHUB_ENV"
+        df -h --sync "$GITHUB_WORKSPACE"
     - uses: actions/checkout@v6
       with:
         lfs: 'true'
         clean: false
-        persist-credentials: false
+        persist-credentials: true
+    - name: Configure PR checkout
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: |
+        git checkout -B "github-pr-${{ github.event.pull_request.number }}"
+        git config --global --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
+        git config --global --add remote.origin.fetch '+refs/pull/*/merge:refs/remotes/origin/pull/*/merge'
+    - name: Cache binary repositories
+      uses: actions/cache/restore@v5
+      with:
+        path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
+        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture)) }}
+        restore-keys: |
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-
+    - name: Maximize disk space
+      if: steps.disk_space.outputs.low_space == 'true'
+      shell: bash
+      run: |
+        df -h --sync /
+        MToolPath="Binaries/Malterlib/$BuildPlatform/$BuildArchitecture/MTool"
+        if [[ -f "$MToolPath" ]]; then
+          sudo "$MToolPath" DeleteRecursiveParallel $MaximizeDiskSpaceDirectories || sudo rm -rf $MaximizeDiskSpaceDirectories
+        else
+          sudo rm -rf $MaximizeDiskSpaceDirectories
+        fi
+        if command -v docker >/dev/null 2>&1; then
+          sudo docker image prune --all --force || true
+        fi
+        df -h --sync /
+        swapon --show
+    - name: Cache Linux SDK binary repository
+      uses: actions/cache/restore@v5
+      with:
+        path: Binaries/MalterlibSDK/Linux/Ubuntu/${{ inputs.architecture }}
+        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-Ubuntu-{0}.MRepo', inputs.architecture)) }}
+        restore-keys: |
+          malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-
+    - name: Restore llvm-project
+      uses: actions/cache/restore@v5
+      with:
+        path: External/llvm-project
+        key: malterlib-llvm-project-v2-${{ hashFiles('.github/repository-cache/External-llvm-project.MRepo') }}
+        restore-keys: |
+          malterlib-llvm-project-v2-
+        enableCrossOsArchive: true
     - name: Build
       shell: bash
       run: |
@@ -69,18 +217,18 @@ jobs:
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
 
   test_linux:
-    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+    name: Test ${{ matrix.display_os }}
     runs-on: ${{ matrix.os }}
-    needs: [build_linux]
+    needs: [build]
     timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
+        include: ${{ fromJSON(inputs.architecture == 'arm64' && '[{"os":"ubuntu-22.04-arm","display_os":"22.04"},{"os":"ubuntu-24.04-arm","display_os":"24.04"}]' || '[{"os":"ubuntu-22.04","display_os":"22.04"},{"os":"ubuntu-24.04","display_os":"24.04"}]') }}
     steps:
     - name: Maximize disk space
       shell: bash
@@ -90,7 +238,7 @@ jobs:
         df -h
     - uses: actions/download-artifact@v8
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
     - name: Swap space report before modification
       shell: bash
@@ -171,7 +319,10 @@ jobs:
         cd /Deploy
         export MalterlibCrashDumpDir="$PWD/CrashDumps"
         tar -xf "$ArtifactsPath"
-        mv Tests* Tests
+        TestsDirName=`find Tests* -maxdepth 0`
+        if [[ "$TestsDirName" != "Tests" ]]; then
+          mv "$TestsDirName" Tests
+        fi
         cd Tests
         ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
         sudo -E ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs

@@ -1,0 +1,121 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Warm Repository Cache
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+      architecture:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+      display_name:
+        required: true
+        type: string
+      warm_llvm_project:
+        required: false
+        type: boolean
+        default: false
+      llvm_cache_key_prefix:
+        required: false
+        type: string
+        default: ''
+      llvm_cache_config_file:
+        required: false
+        type: string
+        default: ''
+      enable_llvm_cross_os_archive:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  warm:
+    name: Repos
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 120
+    env:
+      BuildPlatform: ${{ inputs.platform }}
+      BuildArchitecture: ${{ inputs.architecture }}
+      BuildConfiguration: Debug
+      BuildSanitizer: None
+      GITHUB_TOKEN: ${{ github.token }}
+      Malterlib_UseCachedEnvironment: "false"
+      Malterlib_UseUserSettings: "false"
+      MalterlibRepositoryHardReset: "true"
+      MalterlibBuildShowProgress: "false"
+      MalterlibCacheRepositoriesOnly: "true"
+      MalterlibSyncBinaryLLVMRepositories: "false"
+      HasLLVMRepository: ${{ inputs.warm_llvm_project && 'true' || 'false' }}
+      RunningCI: "true"
+    steps:
+    - name: Setup git config
+      shell: bash
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+        git config --global core.symlinks true
+    - uses: actions/checkout@v6
+      with:
+        lfs: 'true'
+        clean: false
+        persist-credentials: true
+    - name: Configure PR checkout
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: |
+        git checkout -B "github-pr-${{ github.event.pull_request.number }}"
+        git config --global --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
+        git config --global --add remote.origin.fetch '+refs/pull/*/merge:refs/remotes/origin/pull/*/merge'
+    - name: Setup zstd cache tool
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        if (!(Get-Command zstd -ErrorAction SilentlyContinue)) {
+          choco install zstandard --version 1.5.7.20250308 --no-progress --yes
+        }
+    - name: Cache binary repositories
+      id: cache-binaries
+      uses: actions/cache@v5
+      with:
+        path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
+        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture)) }}
+        restore-keys: |
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-
+    - name: Cache Linux SDK binary repository
+      id: cache-linux-sdk
+      if: inputs.platform == 'Linux'
+      uses: actions/cache@v5
+      with:
+        path: Binaries/MalterlibSDK/Linux/Ubuntu/${{ inputs.architecture }}
+        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-Ubuntu-{0}.MRepo', inputs.architecture)) }}
+        restore-keys: |
+          malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-
+    - name: Cache llvm-project
+      id: cache-llvm
+      if: inputs.warm_llvm_project
+      uses: actions/cache@v5
+      with:
+        path: External/llvm-project
+        key: ${{ inputs.llvm_cache_key_prefix }}-${{ hashFiles(inputs.llvm_cache_config_file) }}
+        restore-keys: |
+          ${{ inputs.llvm_cache_key_prefix }}-
+        enableCrossOsArchive: ${{ inputs.enable_llvm_cross_os_archive }}
+    - name: Warm repositories
+      if: >-
+        steps.cache-binaries.outputs.cache-hit != 'true' ||
+        (inputs.platform == 'Linux' && steps.cache-linux-sdk.outputs.cache-hit != 'true') ||
+        (inputs.warm_llvm_project && steps.cache-llvm.outputs.cache-hit != 'true')
+      shell: bash
+      run: |
+        set -e
+        ./.github/workflows/Build.sh

@@ -15,6 +15,16 @@ on:
       configuration:
         required: true
         type: string
+      sanitizer:
+        required: false
+        type: string
+        default: 'None'
+      display_name:
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 env:
   Malterlib_UseCachedEnvironment: "false"
@@ -26,7 +36,7 @@ env:
   MalterlibEnableLinkTimeCodeGeneration: "false"
   MalterlibImportUpdateCache: "false"
   MalterlibBuildLogFile: "Artifacts/Build.log"
-  MalterlibEnableSanitizerReleaseConfigs: "true"
+  MalterlibEnableSanitizerReleaseConfigs: "false"
   MalterlibEnablePrefTestConfig: "false"
   MalterlibEnableInternalTests: "true"
   MalterlibDebugSymbolsEnable: "false"
@@ -41,21 +51,20 @@ env:
   MalterlibConcurrency_DebugSubscriptions: "true"
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
-  MALTERLIB_GITHUB_USER_TOKEN: ${{ secrets.MALTERLIB_GITHUB_USER_TOKEN }}
-  MALTERLIB_GITHUB_USER: ${{ secrets.MALTERLIB_GITHUB_USER }}
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
 
 jobs:
-  build_windows:
-    name: Build ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
-    #runs-on: runner-windows-16core
-    runs-on: self-hosted-windows-11-build
-    timeout-minutes: 30
+  build:
+    name: Build
+    runs-on: ${{ inputs.architecture == 'arm64' && 'windows-11-arm' || 'windows-2025' }}
+    timeout-minutes: 120
     env:
       BuildPlatform: ${{ inputs.platform }}
       BuildArchitecture: ${{ inputs.architecture }}
       BuildConfiguration: ${{ inputs.configuration }}
+      BuildSanitizer: ${{ inputs.sanitizer }}
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
     - name: Setup git config
       run: |
@@ -66,7 +75,20 @@ jobs:
       with:
         lfs: 'true'
         clean: false
-        persist-credentials: false
+        persist-credentials: true
+    - name: Configure PR checkout
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: |
+        git checkout -B "github-pr-${{ github.event.pull_request.number }}"
+        git config --global --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
+        git config --global --add remote.origin.fetch '+refs/pull/*/merge:refs/remotes/origin/pull/*/merge'
+    - name: Setup zstd cache tool
+      shell: pwsh
+      run: |
+        if (!(Get-Command zstd -ErrorAction SilentlyContinue)) {
+          choco install zstandard --version 1.5.7.20250308 --no-progress --yes
+        }
     # - name: Configure Pagefile
     #   shell: pwsh
     #   run: |
@@ -90,16 +112,20 @@ jobs:
     #     MaximumSize: 64GB
     #     DiskRoot: "C:"
     #     SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
-    #- name: Cache Binaries
-    #  uses: actions/cache@v4
-    #  env:
-    #    cache-name: cache-binaries-windows-x64
-    #  with:
-    #    path: |
-    #      Binaries/Malterlib/Windows/x64
-    #    key: ${{ env.cache-name }}-${{ hashFiles('**/*.MRepo') }}
-    #    restore-keys: |
-    #      ${{ env.cache-name }}-
+    - name: Cache binary repositories
+      uses: actions/cache/restore@v5
+      with:
+        path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
+        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture)) }}
+        restore-keys: |
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-
+    - name: Restore llvm-project
+      uses: actions/cache/restore@v5
+      with:
+        path: External/llvm-project
+        key: malterlib-llvm-project-windows-v2-${{ hashFiles('.github/repository-cache/External-llvm-project.MRepo') }}
+        restore-keys: |
+          malterlib-llvm-project-windows-v2-
     - name: Build
       shell: bash -leo pipefail {0}
       run: |
@@ -109,29 +135,29 @@ jobs:
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: |
           Artifacts
     - uses: actions/upload-artifact@v7
       if: (success() && (env.MalterlibDeploySymbols == 'true'))
       with:
-        name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Symbols ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: |
           Symbols
 
   test_windows:
-    name: Test ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+    name: Test ${{ matrix.display_os }}
     runs-on: ${{ matrix.os }}
-    needs: [build_windows]
+    needs: [build]
     timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, windows-2025]
+        include: ${{ fromJSON(inputs.architecture == 'arm64' && '[{"os":"windows-11-arm","display_os":"11"}]' || '[{"os":"windows-2022","display_os":"2022"},{"os":"windows-2025","display_os":"2025"}]') }}
     steps:
     - uses: actions/download-artifact@v8
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
     - name: Disk space before
       shell: bash
@@ -180,7 +206,11 @@ jobs:
         cd Deploy
         export MalterlibCrashDumpDir=`cygpath -m "$PWD/CrashDumps"`
         mkdir -p "$PWD/CrashDumps"
-        tar -xf ../Artifacts/Deploy.tar.zst
+        BsdTar="../Artifacts/bsdtar.exe"
+        if [[ ! -f "$BsdTar" ]]; then
+          BsdTar="tar"
+        fi
+        "$BsdTar" -xf ../Artifacts/Deploy.tar.zst
         cd Tests*
         ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
         exit 0
@@ -190,7 +220,7 @@ jobs:
     - uses: actions/upload-artifact@v7
       if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
       with:
-        name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+        name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: |
           Deploy/CrashDumps/MiniDump_*
           Deploy/CrashDumps/*.txt

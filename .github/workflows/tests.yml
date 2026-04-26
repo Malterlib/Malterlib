@@ -3,54 +3,256 @@
 
 name: Tests
 
-on: [push]
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  run_windows:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [Windows]
-        architecture: [x64]
-        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)']
-    uses: ./.github/workflows/Test_Windows.yml
+  warm_linux_arm64:
+    name: Warm Linux arm64
+    uses: ./.github/workflows/Warm_Repository_Cache.yml
     with:
-      platform: ${{ matrix.platform }}
-      architecture: ${{ matrix.architecture }}
-      configuration: ${{ matrix.configuration }}
-    secrets: inherit
-    name: Windows ${{ matrix.architecture }} ${{ matrix.configuration }}
+      platform: Linux
+      architecture: arm64
+      runner: ubuntu-24.04-arm
+      display_name: Linux arm64
+      warm_llvm_project: true
+      llvm_cache_key_prefix: malterlib-llvm-project-v2
+      llvm_cache_config_file: .github/repository-cache/External-llvm-project.MRepo
+      enable_llvm_cross_os_archive: true
 
-  run_mac:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macOS]
-        architecture: [x64]
-        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
-    uses: ./.github/workflows/Test_macOS.yml
+  warm_linux_x64:
+    name: Warm Linux x64
+    uses: ./.github/workflows/Warm_Repository_Cache.yml
     with:
-      platform: ${{ matrix.platform }}
-      architecture: ${{ matrix.architecture }}
-      configuration: ${{ matrix.configuration }}
-    secrets: inherit
-    name: macOS ${{ matrix.architecture }} ${{ matrix.configuration }}
+      platform: Linux
+      architecture: x64
+      runner: ubuntu-24.04
+      display_name: Linux x64
 
-  run_linux:
+  warm_mac_arm64:
+    name: Warm Mac arm64
+    uses: ./.github/workflows/Warm_Repository_Cache.yml
+    with:
+      platform: macOS
+      architecture: arm64
+      runner: macos-26
+      display_name: Mac arm64
+
+  warm_mac_x64:
+    name: Warm Mac x64
+    uses: ./.github/workflows/Warm_Repository_Cache.yml
+    with:
+      platform: macOS
+      architecture: x64
+      runner: macos-26-intel
+      display_name: Mac x64
+
+  warm_win_arm64:
+    name: Warm Win arm64
+    uses: ./.github/workflows/Warm_Repository_Cache.yml
+    with:
+      platform: Windows
+      architecture: arm64
+      runner: windows-11-arm
+      display_name: Win arm64
+
+  warm_win_x64:
+    name: Warm Win x64
+    uses: ./.github/workflows/Warm_Repository_Cache.yml
+    with:
+      platform: Windows
+      architecture: x64
+      runner: windows-2025
+      display_name: Win x64
+      warm_llvm_project: true
+      llvm_cache_key_prefix: malterlib-llvm-project-windows-v2
+      llvm_cache_config_file: .github/repository-cache/External-llvm-project.MRepo
+
+  linux_arm64:
+    needs: warm_linux_arm64
     strategy:
       fail-fast: false
       matrix:
-        platform: [Linux]
-        architecture: [x64]
-        configuration: [Debug, 'Release Testing (Tests)', 'Release (Tests)', 'Release (TSan Tests)', 'Release (ASan Tests)', 'Release (UBSan Tests)']
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+        - configuration: 'Release (Tests)'
+          sanitizer: Thread
+          name: TSan
+        - configuration: 'Release (Tests)'
+          sanitizer: Address
+          name: ASan
+        - configuration: 'Release (Tests)'
+          sanitizer: UndefinedBehavior
+          name: UBSan
     uses: ./.github/workflows/Test_Linux.yml
     with:
-      platform: ${{ matrix.platform }}
-      architecture: ${{ matrix.architecture }}
-      configuration: ${{ matrix.configuration }}
-    secrets: inherit
-    name: Linux ${{ matrix.architecture }} ${{ matrix.configuration }}
+      platform: Linux
+      architecture: arm64
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Linux arm64 ${{ matrix.build.name }}
+    name: Linux arm64 ${{ matrix.build.name }}
+
+  linux_x64:
+    needs: [warm_linux_x64, warm_linux_arm64]
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+        - configuration: 'Release (Tests)'
+          sanitizer: Thread
+          name: TSan
+        - configuration: 'Release (Tests)'
+          sanitizer: Address
+          name: ASan
+        - configuration: 'Release (Tests)'
+          sanitizer: UndefinedBehavior
+          name: UBSan
+    uses: ./.github/workflows/Test_Linux.yml
+    with:
+      platform: Linux
+      architecture: x64
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Linux x64 ${{ matrix.build.name }}
+    name: Linux x64 ${{ matrix.build.name }}
+
+  mac_arm64:
+    needs: [warm_mac_arm64, warm_linux_arm64]
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+        - configuration: 'Release (Tests)'
+          sanitizer: Thread
+          name: TSan
+        - configuration: 'Release (Tests)'
+          sanitizer: Address
+          name: ASan
+        - configuration: 'Release (Tests)'
+          sanitizer: UndefinedBehavior
+          name: UBSan
+    uses: ./.github/workflows/Test_macOS.yml
+    with:
+      platform: macOS
+      architecture: arm64
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Mac arm64 ${{ matrix.build.name }}
+    name: Mac arm64 ${{ matrix.build.name }}
+
+  mac_x64:
+    needs: [warm_mac_x64, warm_linux_arm64]
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+        - configuration: 'Release (Tests)'
+          sanitizer: Thread
+          name: TSan
+        - configuration: 'Release (Tests)'
+          sanitizer: Address
+          name: ASan
+        - configuration: 'Release (Tests)'
+          sanitizer: UndefinedBehavior
+          name: UBSan
+    uses: ./.github/workflows/Test_macOS.yml
+    with:
+      platform: macOS
+      architecture: x64
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Mac x64 ${{ matrix.build.name }}
+    name: Mac x64 ${{ matrix.build.name }}
+
+  win_arm64:
+    needs: [warm_win_arm64, warm_win_x64]
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+    uses: ./.github/workflows/Test_Windows.yml
+    with:
+      platform: Windows
+      architecture: arm64
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Win arm64 ${{ matrix.build.name }}
+    name: Win arm64 ${{ matrix.build.name }}
+
+  win_x64:
+    needs: warm_win_x64
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+    uses: ./.github/workflows/Test_Windows.yml
+    with:
+      platform: Windows
+      architecture: x64
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Win x64 ${{ matrix.build.name }}
+    name: Win x64 ${{ matrix.build.name }}
