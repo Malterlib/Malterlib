@@ -155,7 +155,7 @@ jobs:
         sudo mkdir -p "$GITHUB_WORKSPACE"
         sudo mount -o compress-force=zstd:3 "$CompressedDisk" "$GITHUB_WORKSPACE"
         sudo chown "$USER" "$GITHUB_WORKSPACE"
-        BuildScratchRoot="$GITHUB_WORKSPACE/MalterlibBuild"
+        BuildScratchRoot="$GITHUB_WORKSPACE/BuildSystem/MalterlibBuild"
         mkdir -p "$BuildScratchRoot"
         echo "MalterlibBuildScratchRoot=$BuildScratchRoot" >> "$GITHUB_ENV"
         df -h --sync "$GITHUB_WORKSPACE"

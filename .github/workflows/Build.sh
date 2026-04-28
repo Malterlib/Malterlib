@@ -291,7 +291,7 @@ if [[ "${MalterlibCacheRepositoriesOnly:-false}" == "true" ]]; then
 fi
 
 # Fail build is licensing is wrong
-./mib check-license
+./mib check-license --terminal-width=200
 
 df -h
 
