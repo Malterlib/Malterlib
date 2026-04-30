@@ -40,7 +40,7 @@ Property
 		!!Malterlib_AssumeMalterlibHost undefined
 	}
 
-	MalterlibEnableOptonalModules true
+	MalterlibEnableOptionalModules true
 
 	MalterlibEnableThirdPartyComparisonTests true
 	{
