@@ -2,4 +2,9 @@
 # Copyright © Unbroken AB
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-cloc --exclude-dir=node_modules,.meteor,ImportCache,SourceGenerated,External,Binaries,BuildSystem,build '--not-match-f=((LICENSE\.Malterlib$)|(.*\.MRepoState$))' '--lang-no-ext=C/C++ Header' --read-lang-def Malterlib/Core/Documentation/cloc.def --timeout 100 "$@"
+cloc --exclude-dir=node_modules,.meteor,IC,ImportCache,SourceGenerated,External,Binaries,BuildSystem,build \
+	'--not-match-f=((^LICENSE$)|(.*\.MRepoState$))' \
+	'--lang-no-ext=C/C++ Header' \
+	--read-lang-def Malterlib/Core/Documentation/cloc.def \
+	--timeout 100 \
+	"$@"
