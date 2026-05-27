@@ -71,7 +71,7 @@ jobs:
     with:
       platform: Windows
       architecture: x64
-      runner: windows-2025
+      runner: windows-2025-vs2026
       display_name: Win x64
       warm_llvm_project: true
       llvm_cache_key_prefix: malterlib-llvm-project-windows-v2
