@@ -299,6 +299,36 @@ jobs:
         sudo apt update
         sudo apt install sssd
 
+    - name: Configure PostgreSQL tools
+      shell: bash
+      run: |
+        set -e
+        ConfigurePostgresPath() {
+          while IFS= read -r PostgresBin; do
+            if [[ -x "$PostgresBin/initdb" && -x "$PostgresBin/pg_ctl" ]]; then
+              echo "$PostgresBin" >> "$GITHUB_PATH"
+              "$PostgresBin/initdb" --version
+              "$PostgresBin/pg_ctl" --version
+              return 0
+            fi
+          done < <(printf '%s\n' /usr/lib/postgresql/*/bin | sort -Vr)
+
+          return 1
+        }
+
+        if ConfigurePostgresPath; then
+          exit 0
+        fi
+
+        sudo apt install --yes postgresql
+
+        if ConfigurePostgresPath; then
+          exit 0
+        fi
+
+        echo "PostgreSQL initdb and pg_ctl were not found" >&2
+        exit 1
+
     - name: Run tests
       shell: bash
       run: |

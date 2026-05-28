@@ -127,6 +127,7 @@ jobs:
 
       shell: bash
       run: |
+        set -e
         if ! which gtar; then
           brew install gnu-tar --quiet
         fi
@@ -139,6 +140,21 @@ jobs:
         if ! which npm; then
           brew install npm --quiet
         fi
+        PostgresBin=""
+        for Formula in postgresql@18 postgresql@17 postgresql@16 postgresql@15 postgresql; do
+          Candidate="$(brew --prefix "$Formula" 2>/dev/null || true)/bin"
+          if [[ -x "$Candidate/initdb" && -x "$Candidate/pg_ctl" ]]; then
+            PostgresBin="$Candidate"
+            break
+          fi
+        done
+        if [[ -z "$PostgresBin" ]]; then
+          brew install postgresql@17 --quiet
+          PostgresBin="$(brew --prefix postgresql@17)/bin"
+        fi
+        export PATH="$PostgresBin:$PATH"
+        initdb --version
+        pg_ctl --version
         pwd
         echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
         ArtifactsPath="$PWD/Artifacts/Deploy.tar.zst"

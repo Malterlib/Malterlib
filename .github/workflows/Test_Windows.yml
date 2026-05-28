@@ -192,6 +192,42 @@ jobs:
       shell: bash
       run: |
         df -h
+    - name: Configure PostgreSQL tools
+      shell: bash
+      run: |
+        set -e
+        ConfigurePostgresPath() {
+          while IFS= read -r PostgresBin; do
+            if [[ -n "$PostgresBin" && -x "$PostgresBin/initdb.exe" && -x "$PostgresBin/pg_ctl.exe" ]]; then
+              PostgresBinWindows="$(cygpath -w "$PostgresBin")"
+              echo "$PostgresBinWindows" >> "$GITHUB_PATH"
+              echo "PGBIN=$PostgresBinWindows" >> "$GITHUB_ENV"
+              "$PostgresBin/initdb.exe" --version
+              "$PostgresBin/pg_ctl.exe" --version
+              return 0
+            fi
+          done < <(printf '%s\n' "/c/Program Files/PostgreSQL"/*/bin "$RUNNER_TEMP/postgresql-binaries"/*/bin "$PGBIN" | sort -Vr)
+
+          return 1
+        }
+
+        if ConfigurePostgresPath; then
+          exit 0
+        fi
+
+        PostgresArchive="$RUNNER_TEMP/postgresql-binaries.zip"
+        PostgresRoot="$RUNNER_TEMP/postgresql-binaries"
+        curl --fail --location --output "$PostgresArchive" "https://get.enterprisedb.com/postgresql/postgresql-18.4-1-windows-x64-binaries.zip"
+        rm -rf "$PostgresRoot"
+        mkdir -p "$PostgresRoot"
+        powershell -NoProfile -Command "Expand-Archive -LiteralPath '$PostgresArchive' -DestinationPath '$PostgresRoot' -Force"
+
+        if ConfigurePostgresPath; then
+          exit 0
+        fi
+
+        echo "PostgreSQL initdb.exe and pg_ctl.exe were not found" >&2
+        exit 1
     - name: Run tests
       shell: bash
       run: |
