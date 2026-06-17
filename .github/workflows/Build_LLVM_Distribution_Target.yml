@@ -1,0 +1,143 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Build LLVM Distribution Target
+
+on:
+  workflow_call:
+    inputs:
+      display:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+      arch:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+      build_in_container:
+        required: true
+        type: boolean
+      container_image:
+        required: false
+        type: string
+        default: ""
+      container_platform:
+        required: false
+        type: string
+        default: ""
+      stage_1:
+        required: true
+        type: string
+      stage_2:
+        required: false
+        type: string
+        default: ""
+      stage_3:
+        required: false
+        type: string
+        default: ""
+      final_restore_stage:
+        required: true
+        type: string
+      prepopulate_run_id:
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  MalterlibTerminalWidth: "120"
+  GITHUB_TOKEN: ${{ github.token }}
+  MalterlibBuildShowProgress: "false"
+  Malterlib_UseCachedEnvironment: "false"
+  Malterlib_UseUserSettings: "false"
+  MalterlibImportUpdateCache: "false"
+  MalterlibRepositoryHardReset: "true"
+  MalterlibSyncBinaryLLVMRepositories: "false"
+  HasLLVMRepository: "true"
+  RunningCI: "true"
+
+jobs:
+  stage_1:
+    name: ${{ inputs.display }} ${{ inputs.stage_1 }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_With_Retry.yml
+    with:
+      display: ${{ inputs.display }} ${{ inputs.stage_1 }}
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage_1 }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: true
+      create_distribution_archive: false
+    secrets: inherit
+
+  stage_2:
+    name: ${{ inputs.display }} ${{ inputs.stage_2 || 'stage 2' }}
+    needs: stage_1
+    if: ${{ !cancelled() && inputs.stage_2 != '' && needs.stage_1.outputs.status == 'success' }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_With_Retry.yml
+    with:
+      display: ${{ inputs.display }} ${{ inputs.stage_2 }}
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage_2 }}
+      restore_stage: ${{ inputs.stage_1 }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: true
+      create_distribution_archive: false
+    secrets: inherit
+
+  stage_3:
+    name: ${{ inputs.display }} ${{ inputs.stage_3 || 'stage 3' }}
+    needs: stage_2
+    if: ${{ !cancelled() && inputs.stage_3 != '' && needs.stage_2.outputs.status == 'success' }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_With_Retry.yml
+    with:
+      display: ${{ inputs.display }} ${{ inputs.stage_3 }}
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage_3 }}
+      restore_stage: ${{ inputs.stage_2 }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: true
+      create_distribution_archive: false
+    secrets: inherit
+
+  final:
+    name: ${{ inputs.display }} final
+    needs: [stage_1, stage_2, stage_3]
+    if: ${{ !cancelled() && needs.stage_1.outputs.status == 'success' && (inputs.stage_2 == '' || needs.stage_2.outputs.status == 'success') && (inputs.stage_3 == '' || needs.stage_3.outputs.status == 'success') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_With_Retry.yml
+    with:
+      display: ${{ inputs.display }} final
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: final
+      restore_stage: ${{ inputs.final_restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: false
+      create_distribution_archive: true
+    secrets: inherit

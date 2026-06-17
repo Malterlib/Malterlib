@@ -1,0 +1,343 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Build LLVM Distribution Stage With Retry
+
+on:
+  workflow_call:
+    inputs:
+      display:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+      arch:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+      build_in_container:
+        required: true
+        type: boolean
+      container_image:
+        required: false
+        type: string
+        default: ""
+      container_platform:
+        required: false
+        type: string
+        default: ""
+      stage:
+        required: true
+        type: string
+      restore_stage:
+        required: false
+        type: string
+        default: ""
+      prepopulate_run_id:
+        required: false
+        type: string
+        default: ""
+      archive_build_state:
+        required: true
+        type: boolean
+      create_distribution_archive:
+        required: true
+        type: boolean
+    outputs:
+      status:
+        value: ${{ jobs.stage_status.outputs.status }}
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  MalterlibTerminalWidth: "120"
+
+jobs:
+  attempt_1:
+    name: ${{ inputs.display }} attempt 1
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 1
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_2:
+    name: ${{ inputs.display }} attempt 2
+    needs: attempt_1
+    if: ${{ !cancelled() && (needs.attempt_1.outputs.status == 'retry' || needs.attempt_1.outputs.status == 'running' || needs.attempt_1.result == 'failure' || needs.attempt_1.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 2
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_1.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_3:
+    name: ${{ inputs.display }} attempt 3
+    needs: attempt_2
+    if: ${{ !cancelled() && (needs.attempt_2.outputs.status == 'retry' || needs.attempt_2.outputs.status == 'running' || needs.attempt_2.result == 'failure' || needs.attempt_2.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 3
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_2.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_4:
+    name: ${{ inputs.display }} attempt 4
+    needs: attempt_3
+    if: ${{ !cancelled() && (needs.attempt_3.outputs.status == 'retry' || needs.attempt_3.outputs.status == 'running' || needs.attempt_3.result == 'failure' || needs.attempt_3.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 4
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_3.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_5:
+    name: ${{ inputs.display }} attempt 5
+    needs: attempt_4
+    if: ${{ !cancelled() && (needs.attempt_4.outputs.status == 'retry' || needs.attempt_4.outputs.status == 'running' || needs.attempt_4.result == 'failure' || needs.attempt_4.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 5
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_4.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_6:
+    name: ${{ inputs.display }} attempt 6
+    needs: attempt_5
+    if: ${{ !cancelled() && (needs.attempt_5.outputs.status == 'retry' || needs.attempt_5.outputs.status == 'running' || needs.attempt_5.result == 'failure' || needs.attempt_5.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 6
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_5.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_7:
+    name: ${{ inputs.display }} attempt 7
+    needs: attempt_6
+    if: ${{ !cancelled() && (needs.attempt_6.outputs.status == 'retry' || needs.attempt_6.outputs.status == 'running' || needs.attempt_6.result == 'failure' || needs.attempt_6.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 7
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_6.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_8:
+    name: ${{ inputs.display }} attempt 8
+    needs: attempt_7
+    if: ${{ !cancelled() && (needs.attempt_7.outputs.status == 'retry' || needs.attempt_7.outputs.status == 'running' || needs.attempt_7.result == 'failure' || needs.attempt_7.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 8
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_7.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_9:
+    name: ${{ inputs.display }} attempt 9
+    needs: attempt_8
+    if: ${{ !cancelled() && (needs.attempt_8.outputs.status == 'retry' || needs.attempt_8.outputs.status == 'running' || needs.attempt_8.result == 'failure' || needs.attempt_8.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 9
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_8.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_10:
+    name: ${{ inputs.display }} attempt 10
+    needs: attempt_9
+    if: ${{ !cancelled() && (needs.attempt_9.outputs.status == 'retry' || needs.attempt_9.outputs.status == 'running' || needs.attempt_9.result == 'failure' || needs.attempt_9.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 10
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_9.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: false
+    secrets: inherit
+
+  attempt_11:
+    name: ${{ inputs.display }} attempt 11
+    needs: attempt_10
+    if: ${{ !cancelled() && (needs.attempt_10.outputs.status == 'retry' || needs.attempt_10.outputs.status == 'running' || needs.attempt_10.result == 'failure' || needs.attempt_10.result == 'cancelled') }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
+    with:
+      display: ${{ inputs.display }} attempt 11
+      platform: ${{ inputs.platform }}
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.runner }}
+      build_in_container: ${{ inputs.build_in_container }}
+      container_image: ${{ inputs.container_image }}
+      container_platform: ${{ inputs.container_platform }}
+      stage: ${{ inputs.stage }}
+      restore_stage: ${{ needs.attempt_10.outputs.status == 'running' && inputs.stage || inputs.restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      archive_build_state: ${{ inputs.archive_build_state }}
+      create_distribution_archive: ${{ inputs.create_distribution_archive }}
+      fail_on_retry: true
+    secrets: inherit
+
+  stage_status:
+    name: ${{ inputs.display }} status
+    needs: [attempt_1, attempt_2, attempt_3, attempt_4, attempt_5, attempt_6, attempt_7, attempt_8, attempt_9, attempt_10, attempt_11]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-22.04
+    outputs:
+      status: ${{ steps.status.outputs.status }}
+    steps:
+    - name: Resolve stage status
+      id: status
+      shell: bash
+      env:
+        ATTEMPT_1_STATUS: ${{ needs.attempt_1.outputs.status }}
+        ATTEMPT_2_STATUS: ${{ needs.attempt_2.outputs.status }}
+        ATTEMPT_3_STATUS: ${{ needs.attempt_3.outputs.status }}
+        ATTEMPT_4_STATUS: ${{ needs.attempt_4.outputs.status }}
+        ATTEMPT_5_STATUS: ${{ needs.attempt_5.outputs.status }}
+        ATTEMPT_6_STATUS: ${{ needs.attempt_6.outputs.status }}
+        ATTEMPT_7_STATUS: ${{ needs.attempt_7.outputs.status }}
+        ATTEMPT_8_STATUS: ${{ needs.attempt_8.outputs.status }}
+        ATTEMPT_9_STATUS: ${{ needs.attempt_9.outputs.status }}
+        ATTEMPT_10_STATUS: ${{ needs.attempt_10.outputs.status }}
+        ATTEMPT_11_STATUS: ${{ needs.attempt_11.outputs.status }}
+      run: |
+        Statuses=(
+          "$ATTEMPT_1_STATUS"
+          "$ATTEMPT_2_STATUS"
+          "$ATTEMPT_3_STATUS"
+          "$ATTEMPT_4_STATUS"
+          "$ATTEMPT_5_STATUS"
+          "$ATTEMPT_6_STATUS"
+          "$ATTEMPT_7_STATUS"
+          "$ATTEMPT_8_STATUS"
+          "$ATTEMPT_9_STATUS"
+          "$ATTEMPT_10_STATUS"
+          "$ATTEMPT_11_STATUS"
+        )
+
+        for Status in "${Statuses[@]}"; do
+          if [[ "$Status" == "success" ]]; then
+            echo "status=success" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+        done
+
+        if [[ "$ATTEMPT_11_STATUS" == "retry" || "$ATTEMPT_11_STATUS" == "running" ]]; then
+          echo "status=$ATTEMPT_11_STATUS" >> "$GITHUB_OUTPUT"
+          echo "::error::${{ inputs.display }} did not finish after all retry attempts."
+          exit 0
+        fi
+
+        echo "status=failed" >> "$GITHUB_OUTPUT"
+        echo "::error::${{ inputs.display }} did not complete successfully."
+        exit 0

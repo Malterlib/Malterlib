@@ -41,16 +41,61 @@ on:
         required: true
         type: boolean
         default: true
+      prepopulate_run_id:
+        description: Optional workflow run ID to prepopulate stage artifacts from
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
+  actions: read
+
+env:
+  MalterlibTerminalWidth: "120"
 
 jobs:
-  placeholder:
-    name: Placeholder
+  select:
+    name: Select Builds
     runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-    - name: Placeholder
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.ref }}
+        lfs: 'false'
+    - name: Build matrix
+      id: matrix
       shell: bash
-      run: |
-        echo "This default-branch stub enables manual dispatch for branch workflow iteration."
+      env:
+        INPUT_LINUX_X64: ${{ inputs.linux_x64 }}
+        INPUT_LINUX_ARM64: ${{ inputs.linux_arm64 }}
+        INPUT_LINUX_X86: ${{ inputs.linux_x86 }}
+        INPUT_MACOS_ARM64: ${{ inputs.macos_arm64 }}
+        INPUT_MACOS_X64: ${{ inputs.macos_x64 }}
+        INPUT_WINDOWS_X64: ${{ inputs.windows_x64 }}
+        INPUT_WINDOWS_ARM64: ${{ inputs.windows_arm64 }}
+      run: bash ./.github/workflows/Build_LLVM_Distribution_Select.sh
+
+  build:
+    name: ${{ matrix.display }}
+    needs: select
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
+    uses: ./.github/workflows/Build_LLVM_Distribution_Target.yml
+    with:
+      display: ${{ matrix.display }}
+      platform: ${{ matrix.platform }}
+      arch: ${{ matrix.arch }}
+      runner: ${{ matrix.runner }}
+      build_in_container: ${{ matrix.build_in_container }}
+      container_image: ${{ matrix.container_image }}
+      container_platform: ${{ matrix.container_platform }}
+      stage_1: ${{ matrix.stage_1 }}
+      stage_2: ${{ matrix.stage_2 }}
+      stage_3: ${{ matrix.stage_3 }}
+      final_restore_stage: ${{ matrix.final_restore_stage }}
+      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+    secrets: inherit
