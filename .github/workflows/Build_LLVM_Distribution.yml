@@ -1,0 +1,56 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Build LLVM Distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      linux_x64:
+        description: Linux x64
+        required: true
+        type: boolean
+        default: true
+      linux_arm64:
+        description: Linux arm64
+        required: true
+        type: boolean
+        default: true
+      linux_x86:
+        description: Linux x86
+        required: true
+        type: boolean
+        default: true
+      macos_arm64:
+        description: macOS arm64
+        required: true
+        type: boolean
+        default: true
+      macos_x64:
+        description: macOS x64
+        required: true
+        type: boolean
+        default: true
+      windows_x64:
+        description: Windows x64
+        required: true
+        type: boolean
+        default: true
+      windows_arm64:
+        description: Windows arm64
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  placeholder:
+    name: Placeholder
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Placeholder
+      shell: bash
+      run: |
+        echo "This default-branch stub enables manual dispatch for branch workflow iteration."
