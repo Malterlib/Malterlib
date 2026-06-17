@@ -38,6 +38,9 @@ on:
 permissions:
   contents: read
 
+env:
+  MalterlibTerminalWidth: "120"
+
 jobs:
   warm:
     name: Repos

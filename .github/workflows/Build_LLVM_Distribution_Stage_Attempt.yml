@@ -1,0 +1,324 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Build LLVM Distribution Stage Attempt
+
+on:
+  workflow_call:
+    inputs:
+      display:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+      arch:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+      build_in_container:
+        required: true
+        type: boolean
+      container_image:
+        required: false
+        type: string
+        default: ""
+      container_platform:
+        required: false
+        type: string
+        default: ""
+      stage:
+        required: true
+        type: string
+      restore_stage:
+        required: false
+        type: string
+        default: ""
+      prepopulate_run_id:
+        required: false
+        type: string
+        default: ""
+      archive_build_state:
+        required: true
+        type: boolean
+      create_distribution_archive:
+        required: true
+        type: boolean
+      fail_on_retry:
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      status:
+        value: ${{ jobs.stage_attempt.outputs.status }}
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  MalterlibTerminalWidth: "120"
+  GITHUB_TOKEN: ${{ github.token }}
+  MalterlibBuildShowProgress: "false"
+  Malterlib_UseCachedEnvironment: "false"
+  Malterlib_UseUserSettings: "false"
+  MalterlibImportUpdateCache: "false"
+  MalterlibRepositoryHardReset: "true"
+  MalterlibSyncBinaryLLVMRepositories: "false"
+  HasLLVMRepository: "true"
+  RunningCI: "true"
+
+jobs:
+  stage_attempt:
+    name: ${{ inputs.display }}
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 360
+    outputs:
+      status: ${{ steps.stage_failure.outputs.status || steps.stage_retry.outputs.status || steps.restore_source.outputs.status || steps.run_stage.outputs.status }}
+    env:
+      BuildPlatform: ${{ inputs.platform }}
+      BuildArchitecture: ${{ inputs.arch }}
+      BuildConfiguration: Debug
+      BuildSanitizer: None
+      LLVM_STAGE: ${{ inputs.stage }}
+      LLVM_NINJA_ATTEMPT_TIMEOUT_SECONDS: "18000"
+    steps:
+    - name: Set attempt deadline
+      id: attempt_deadline
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+      run: |
+        if [[ "$PLATFORM" != "Windows" ]]; then
+          Deadline="$(( $(date +%s) + LLVM_NINJA_ATTEMPT_TIMEOUT_SECONDS ))"
+          echo "LLVMNinjaTimeoutDeadlineSeconds=$Deadline" >> "$GITHUB_ENV"
+          echo "LLVM ninja deadline: $Deadline"
+        fi
+    - name: Setup git config
+      id: setup_git
+      if: ${{ steps.attempt_deadline.outcome == 'success' }}
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      shell: bash
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+        git config --global core.symlinks true
+    - uses: actions/checkout@v6
+      id: checkout
+      if: ${{ steps.setup_git.outcome == 'success' }}
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      with:
+        ref: ${{ github.ref }}
+        fetch-depth: 0
+        lfs: 'false'
+        clean: false
+        persist-credentials: true
+    - name: Check runner disk
+      id: runner_disk
+      if: ${{ steps.checkout.outcome == 'success' }}
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        MINIMUM_AVAILABLE_GB: "50"
+      run: bash ./.github/workflows/Build_LLVM_Check_Runner_Disk.sh
+    - name: Set retry status
+      id: stage_retry
+      if: ${{ steps.checkout.outcome == 'success' && steps.runner_disk.outputs.status == 'retry' }}
+      shell: bash
+      run: echo "status=retry" >> "$GITHUB_OUTPUT"
+    - name: Fail after retry exhaustion
+      if: ${{ inputs.fail_on_retry && steps.checkout.outcome == 'success' && steps.runner_disk.outputs.status == 'retry' }}
+      shell: bash
+      run: |
+        echo "::error::Rejected runner after retry limit for ${{ inputs.display }}."
+        exit 1
+    - uses: actions/download-artifact@v8
+      id: download_current_stage_build_state
+      if: ${{ steps.checkout.outcome == 'success' && inputs.restore_stage == inputs.stage && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: true
+      with:
+        name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.stage }}
+        path: BuildState
+    - uses: actions/download-artifact@v8
+      id: download_prepopulated_stage_build_state
+      if: ${{ steps.checkout.outcome == 'success' && steps.download_current_stage_build_state.outcome != 'success' && inputs.prepopulate_run_id != '' && inputs.archive_build_state && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: true
+      with:
+        name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.stage }}
+        path: PrepopulatedStageBuildState
+        github-token: ${{ github.token }}
+        run-id: ${{ inputs.prepopulate_run_id }}
+    - uses: actions/download-artifact@v8
+      id: download_prepopulated_distribution
+      if: ${{ steps.checkout.outcome == 'success' && inputs.prepopulate_run_id != '' && inputs.create_distribution_archive && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: true
+      with:
+        name: MalterlibLLVM-${{ inputs.platform }}-${{ inputs.arch }}
+        path: Artifacts
+        github-token: ${{ github.token }}
+        run-id: ${{ inputs.prepopulate_run_id }}
+    - name: Check prepopulated stage status
+      id: check_prepopulated_stage_status
+      if: ${{ steps.checkout.outcome == 'success' && inputs.prepopulate_run_id != '' && (steps.download_prepopulated_stage_build_state.outcome == 'success' || steps.download_prepopulated_distribution.outcome == 'success') && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: true
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PREPOPULATE_RUN_ID: ${{ inputs.prepopulate_run_id }}
+        PLATFORM: ${{ inputs.platform }}
+        ARCH: ${{ inputs.arch }}
+        STAGE: ${{ inputs.stage }}
+      run: |
+        Status=unknown
+        StageDisplay="$PLATFORM $ARCH $STAGE"
+        StatusSuffix="$StageDisplay status"
+
+        if command -v gh >/dev/null 2>&1; then
+          StatusJobId=""
+          while IFS=$'\t' read -r JobId JobName
+          do
+            if [[ "$JobName" == "$StatusSuffix" || "$JobName" == *" / $StatusSuffix" ]]; then
+              StatusJobId="$JobId"
+            fi
+          done < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PREPOPULATE_RUN_ID/jobs" --paginate --jq '.jobs[] | [.id, .name] | @tsv')
+
+          if [[ -n "$StatusJobId" ]]; then
+            StatusLog="$(mktemp)"
+            if gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$StatusJobId/logs" > "$StatusLog"; then
+              if grep -Eq 'ATTEMPT_[0-9]+_STATUS:[[:space:]]+success' "$StatusLog"; then
+                Status=success
+              else
+                Status=not-success
+              fi
+            fi
+            rm -f "$StatusLog"
+          fi
+        fi
+
+        echo "status=$Status" >> "$GITHUB_OUTPUT"
+        echo "Prepopulated source stage status for $StageDisplay from run $PREPOPULATE_RUN_ID: $Status"
+    - uses: actions/download-artifact@v8
+      id: download_build_state
+      if: ${{ steps.checkout.outcome == 'success' && steps.download_current_stage_build_state.outcome != 'success' && steps.check_prepopulated_stage_status.outputs.status != 'success' && (steps.download_prepopulated_stage_build_state.outcome != 'success' || inputs.stage == 'training') && inputs.restore_stage != '' && inputs.restore_stage != inputs.stage && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: true
+      with:
+        name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.restore_stage }}
+        path: BuildState
+    - uses: actions/download-artifact@v8
+      id: download_prepopulated_build_state
+      if: ${{ steps.checkout.outcome == 'success' && steps.download_current_stage_build_state.outcome != 'success' && steps.check_prepopulated_stage_status.outputs.status != 'success' && (steps.download_prepopulated_stage_build_state.outcome != 'success' || inputs.stage == 'training') && steps.download_build_state.outcome != 'success' && inputs.prepopulate_run_id != '' && inputs.restore_stage != '' && inputs.restore_stage != inputs.stage && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: true
+      with:
+        name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.restore_stage }}
+        path: BuildState
+        github-token: ${{ github.token }}
+        run-id: ${{ inputs.prepopulate_run_id }}
+    - name: Resolve restore source
+      id: restore_source
+      if: ${{ steps.checkout.outcome == 'success' && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        ARCH: ${{ inputs.arch }}
+        STAGE: ${{ inputs.stage }}
+        RESTORE_STAGE: ${{ inputs.restore_stage }}
+        PREPOPULATED_STAGE_BUILD_STATE: ${{ steps.download_prepopulated_stage_build_state.outcome == 'success' && 'true' || 'false' }}
+        PREPOPULATED_DISTRIBUTION: ${{ steps.download_prepopulated_distribution.outcome == 'success' && 'true' || 'false' }}
+        PREPOPULATED_STAGE_STATUS: ${{ steps.check_prepopulated_stage_status.outputs.status }}
+      run: |
+        if [[ "$PREPOPULATED_STAGE_STATUS" == "success" && "$PREPOPULATED_DISTRIBUTION" == "true" ]]; then
+          echo "::notice::Prepopulated ${{ inputs.display }} distribution from successful workflow run ${{ inputs.prepopulate_run_id }}."
+          echo "status=success" >> "$GITHUB_OUTPUT"
+          find Artifacts -maxdepth 1 -type f -print -exec ls -lh {} \; 2>/dev/null || true
+          exit 0
+        fi
+
+        if [[ "$PREPOPULATED_STAGE_STATUS" == "success" && "$PREPOPULATED_STAGE_BUILD_STATE" == "true" ]]; then
+          Archive="$(find PrepopulatedStageBuildState -name '*.tar.zst' -print -quit 2>/dev/null || true)"
+          if [[ -z "$Archive" ]]; then
+            echo "::error::Prepopulated build state artifact did not contain a .tar.zst file."
+            exit 1
+          fi
+
+          mkdir -p BuildStates
+          cp -f "$Archive" "BuildStates/MalterlibLLVMBuild-$PLATFORM-$ARCH-$STAGE.tar.zst"
+          echo "::notice::Prepopulated ${{ inputs.display }} build state from successful workflow run ${{ inputs.prepopulate_run_id }}."
+          echo "status=success" >> "$GITHUB_OUTPUT"
+          ls -lh "BuildStates/MalterlibLLVMBuild-$PLATFORM-$ARCH-$STAGE.tar.zst"
+          exit 0
+        fi
+
+        if [[ "$PREPOPULATED_STAGE_BUILD_STATE" == "true" && "$STAGE" != "training" ]]; then
+          mkdir -p BuildState
+          Archive="$(find PrepopulatedStageBuildState -name '*.tar.zst' -print -quit 2>/dev/null || true)"
+          if [[ -n "$Archive" ]]; then
+            cp -f "$Archive" BuildState/
+          fi
+        fi
+
+        RestoreBuildState=false
+        Archive="$(find BuildState -name '*.tar.zst' -print -quit 2>/dev/null || true)"
+        if [[ -n "$Archive" ]]; then
+          RestoreBuildState=true
+        fi
+
+        echo "restore_build_state=$RestoreBuildState" >> "$GITHUB_OUTPUT"
+        if [[ "$RestoreBuildState" == "true" ]]; then
+          find BuildState -name '*.tar.zst' -print -exec ls -lh {} \; 2>/dev/null || true
+        elif [[ -n "$RESTORE_STAGE" ]]; then
+          echo "::error::Missing build state artifact for restore stage: $RESTORE_STAGE"
+          exit 1
+        fi
+    - name: Run LLVM stage
+      id: run_stage
+      if: ${{ steps.checkout.outcome == 'success' && steps.restore_source.outputs.status != 'success' && steps.runner_disk.outputs.status == 'ok' && steps.restore_source.outcome == 'success' }}
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      shell: bash -leo pipefail {0}
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        ARCH: ${{ inputs.arch }}
+        BUILD_IN_CONTAINER: ${{ inputs.build_in_container }}
+        CONTAINER_IMAGE: ${{ inputs.container_image }}
+        CONTAINER_PLATFORM: ${{ inputs.container_platform }}
+        RESTORE_BUILD_STATE: ${{ steps.restore_source.outputs.restore_build_state == 'true' && 'true' || 'false' }}
+        ARCHIVE_BUILD_STATE: ${{ inputs.archive_build_state && 'true' || 'false' }}
+        CREATE_DISTRIBUTION_ARCHIVE: ${{ inputs.create_distribution_archive && 'true' || 'false' }}
+        LLVMNinjaTimeoutSeconds: ${{ inputs.platform != 'Windows' && '18000' || '' }}
+      run: bash ./.github/workflows/Build_LLVM_Run_Target_Stage.sh
+    - name: Fail after timeout retry exhaustion
+      if: ${{ inputs.fail_on_retry && steps.run_stage.outputs.status == 'running' }}
+      shell: bash
+      run: |
+        echo "::error::LLVM stage still running after retry limit for ${{ inputs.display }}."
+        exit 1
+    - uses: actions/upload-artifact@v7
+      id: upload_build_state
+      if: ${{ (inputs.archive_build_state || steps.run_stage.outputs.status == 'running') && steps.runner_disk.outputs.status == 'ok' }}
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      with:
+        name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.stage }}
+        path: BuildStates/MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.stage }}.tar.zst
+        if-no-files-found: error
+        overwrite: true
+        retention-days: 1
+    - uses: actions/upload-artifact@v7
+      id: upload_distribution
+      if: ${{ inputs.create_distribution_archive && (steps.run_stage.outputs.status == 'success' || steps.restore_source.outputs.status == 'success') }}
+      continue-on-error: ${{ inputs.fail_on_retry == false }}
+      with:
+        name: MalterlibLLVM-${{ inputs.platform }}-${{ inputs.arch }}
+        path: Artifacts/MalterlibLLVM-${{ inputs.platform }}-${{ inputs.arch }}.tar.zst
+        if-no-files-found: error
+        retention-days: 7
+    - name: Set failed attempt retry status
+      id: stage_failure
+      if: ${{ inputs.fail_on_retry == false && (steps.attempt_deadline.outcome == 'failure' || steps.setup_git.outcome == 'failure' || steps.checkout.outcome == 'failure' || steps.runner_disk.outcome == 'failure' || steps.restore_source.outcome == 'failure' || steps.run_stage.outcome == 'failure' || steps.upload_build_state.outcome == 'failure' || steps.upload_distribution.outcome == 'failure') }}
+      shell: bash
+      run: |
+        echo "::warning::${{ inputs.display }} failed; retrying in the next attempt."
+        echo "status=retry" >> "$GITHUB_OUTPUT"
