@@ -251,6 +251,9 @@ jobs:
         - configuration: 'Release (Tests)'
           sanitizer: 'None'
           name: Release
+        - configuration: 'Release (Tests)'
+          sanitizer: Address
+          name: ASan
     uses: ./.github/workflows/Test_Windows.yml
     with:
       platform: Windows

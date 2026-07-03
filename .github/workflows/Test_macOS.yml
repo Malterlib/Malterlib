@@ -117,15 +117,10 @@ jobs:
         include: ${{ fromJSON(inputs.architecture == 'arm64' && '[{"os":"macos-14","display_os":"14"},{"os":"macos-15","display_os":"15"},{"os":"macos-26","display_os":"26"}]' || '[{"os":"macos-15-intel","display_os":"15"},{"os":"macos-26-intel","display_os":"26"}]') }}
     steps:
     - uses: actions/download-artifact@v8
-      # TSAN and ASAN are broken on macOS 26
-      if: (!(startsWith(matrix.os, 'macos-26') && (inputs.sanitizer == 'Thread' || inputs.sanitizer == 'Address')))
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
     - name: Run tests
-      # TSAN and ASAN are broken on macOS 26
-      if: (!(startsWith(matrix.os, 'macos-26') && (inputs.sanitizer == 'Thread' || inputs.sanitizer == 'Address')))
-
       shell: bash
       run: |
         set -e
