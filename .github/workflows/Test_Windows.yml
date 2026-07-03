@@ -133,12 +133,21 @@ jobs:
         set -e
         git reset --hard
         ./.github/workflows/Build.sh
+    - name: Stage deploy artifact
+      shell: bash
+      run: mv Artifacts/Deploy.tar.zst "$DeployArtifact"
+      env:
+        DeployArtifact: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
+    - uses: actions/upload-artifact@v7
+      with:
+        path: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
+        archive: false
+        if-no-files-found: error
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
-        path: |
-          Artifacts
+        path: Artifacts
     - uses: actions/upload-artifact@v7
       if: (success() && (env.MalterlibDeploySymbols == 'true'))
       with:
@@ -154,18 +163,42 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.architecture == 'arm64' && '[{"os":"windows-11-arm","display_os":"11"}]' || '[{"os":"windows-2022","display_os":"2022"},{"os":"windows-2025-vs2026","display_os":"2025"}]') }}
+        include: |-
+          ${{ fromJSON(
+            inputs.architecture == 'arm64' && '[
+              {"os":"windows-11-arm","display_os":"11"}
+            ]' || '[
+              {"os":"windows-2022","display_os":"2022"},
+              {"os":"windows-2025-vs2026","display_os":"2025"}
+            ]'
+          ) }}
     steps:
+    - name: Setup git config
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v6
+      with:
+        sparse-checkout: .github
+        persist-credentials: false
     - uses: actions/download-artifact@v8
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
+    - uses: actions/download-artifact@v8
+      with:
+        name: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
+        path: Artifacts
+    - name: Prepare artifacts
+      shell: bash
+      run: mv "$DeployArtifact" Artifacts/Deploy.tar.zst
+      env:
+        DeployArtifact: Artifacts/Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
     - name: Disk space before
       shell: bash
       run: |
         echo Workspace: '${{ github.workspace }}'
         df -h
-        curl -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -H 'Accept: application/vnd.github.v3.raw' -L -O "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/.github/workflows/SetPageFileSize.cs?ref=$GITHUB_REF"
     - name: Configure Pagefile
       shell: pwsh
       run: |
@@ -188,69 +221,14 @@ jobs:
         MinimumSize: 16GB
         MaximumSize: 64GB
         DiskRoot: "C:"
-        SourcePath: ${{ github.workspace }}/SetPageFileSize.cs
+        SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
     - name: Disk space after
       shell: bash
       run: |
         df -h
-    - name: Configure PostgreSQL tools
-      shell: bash
-      run: |
-        set -e
-        ConfigurePostgresPath() {
-          while IFS= read -r PostgresBin; do
-            if [[ -n "$PostgresBin" && -x "$PostgresBin/initdb.exe" && -x "$PostgresBin/pg_ctl.exe" ]]; then
-              PostgresBinWindows="$(cygpath -w "$PostgresBin")"
-              echo "$PostgresBinWindows" >> "$GITHUB_PATH"
-              echo "PGBIN=$PostgresBinWindows" >> "$GITHUB_ENV"
-              "$PostgresBin/initdb.exe" --version
-              "$PostgresBin/pg_ctl.exe" --version
-              return 0
-            fi
-          done < <(printf '%s\n' "/c/Program Files/PostgreSQL"/*/bin "$RUNNER_TEMP/postgresql-binaries"/*/bin "$PGBIN" | sort -Vr)
-
-          return 1
-        }
-
-        if ConfigurePostgresPath; then
-          exit 0
-        fi
-
-        PostgresArchive="$RUNNER_TEMP/postgresql-binaries.zip"
-        PostgresRoot="$RUNNER_TEMP/postgresql-binaries"
-        curl --fail --location --output "$PostgresArchive" "https://get.enterprisedb.com/postgresql/postgresql-18.4-1-windows-x64-binaries.zip"
-        rm -rf "$PostgresRoot"
-        mkdir -p "$PostgresRoot"
-        powershell -NoProfile -Command "Expand-Archive -LiteralPath '$PostgresArchive' -DestinationPath '$PostgresRoot' -Force"
-
-        if ConfigurePostgresPath; then
-          exit 0
-        fi
-
-        echo "PostgreSQL initdb.exe and pg_ctl.exe were not found" >&2
-        exit 1
     - name: Run tests
       shell: bash
-      run: |
-        set -ex
-        if [[ "$MatrixOs" == "windows-2019" ]]; then
-          MalterlibFlakySuites="$MalterlibFlakySuites;Malterlib/Cloud/SecretsManager/General"
-        fi
-        pwd
-        echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        rm -rf Deploy
-        mkdir -p Deploy
-        cd Deploy
-        export MalterlibCrashDumpDir=`cygpath -m "$PWD/CrashDumps"`
-        mkdir -p "$PWD/CrashDumps"
-        BsdTar="../Artifacts/bsdtar.exe"
-        if [[ ! -f "$BsdTar" ]]; then
-          BsdTar="tar"
-        fi
-        "$BsdTar" -xf ../Artifacts/Deploy.tar.zst
-        cd Tests*
-        ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
-        exit 0
+      run: ./.github/workflows/Run_Windows_Tests.sh
       env:
         MatrixOs: ${{ matrix.os }}
 

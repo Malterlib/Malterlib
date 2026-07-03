@@ -41,6 +41,15 @@ jobs:
       runner: ubuntu-24.04
       display_name: Linux x64
 
+  warm_linux_x86:
+    name: Warm Linux x86
+    uses: ./.github/workflows/Warm_Repository_Cache.yml
+    with:
+      platform: Linux
+      architecture: x86
+      runner: ubuntu-24.04
+      display_name: Linux x86
+
   warm_mac_arm64:
     name: Warm Mac arm64
     uses: ./.github/workflows/Warm_Repository_Cache.yml
@@ -145,6 +154,36 @@ jobs:
       sanitizer: ${{ matrix.build.sanitizer }}
       display_name: Linux x64 ${{ matrix.build.name }}
     name: Linux x64 ${{ matrix.build.name }}
+
+  linux_x86:
+    needs: [warm_linux_x86, warm_linux_x64, warm_linux_arm64]
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+        - configuration: 'Release (Tests)'
+          sanitizer: Address
+          name: ASan
+        - configuration: 'Release (Tests)'
+          sanitizer: UndefinedBehavior
+          name: UBSan
+    uses: ./.github/workflows/Test_Linux.yml
+    with:
+      platform: Linux
+      architecture: x86
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Linux x86 ${{ matrix.build.name }}
+    name: Linux x86 ${{ matrix.build.name }}
 
   mac_arm64:
     needs: [warm_mac_arm64, warm_linux_arm64]

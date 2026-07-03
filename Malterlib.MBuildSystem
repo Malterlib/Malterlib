@@ -124,6 +124,10 @@ Repository
 	{
 		!!Repository.Location "Binaries/MalterlibSDK/Linux/Ubuntu/x64"->MakeAbsolute()
 	}
+	AdditionalConfigFiles =+ ".github/repository-cache/MalterlibBinariesSDK-Linux-Debian-x86.MRepo"->MakeAbsolute()
+	{
+		!!Repository.Location "Binaries/MalterlibSDK/Linux/Debian/x86"->MakeAbsolute()
+	}
 
 	AdditionalConfigFiles =+ ".github/repository-cache/External-llvm-project.MRepo"->MakeAbsolute()
 	{

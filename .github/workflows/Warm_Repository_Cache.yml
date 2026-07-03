@@ -86,8 +86,10 @@ jobs:
         if (!(Get-Command zstd -ErrorAction SilentlyContinue)) {
           choco install zstandard --version 1.5.7.20250308 --no-progress --yes
         }
+    # The Malterlib binaries are host tools; x86 builds run on x64 hosts whose binaries are warmed by the x64 job
     - name: Cache binary repositories
       id: cache-binaries
+      if: inputs.architecture != 'x86'
       uses: actions/cache@v5
       with:
         path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
@@ -99,8 +101,8 @@ jobs:
       if: inputs.platform == 'Linux'
       uses: actions/cache@v5
       with:
-        path: Binaries/MalterlibSDK/Linux/Ubuntu/${{ inputs.architecture }}
-        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-Ubuntu-{0}.MRepo', inputs.architecture)) }}
+        path: Binaries/MalterlibSDK/Linux/${{ inputs.architecture == 'x86' && 'Debian' || 'Ubuntu' }}/${{ inputs.architecture }}
+        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-{0}-{1}.MRepo', (inputs.architecture == 'x86' && 'Debian' || 'Ubuntu'), inputs.architecture)) }}
         restore-keys: |
           malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-
     - name: Cache llvm-project

@@ -54,7 +54,7 @@ env:
   RunningCI: "true"
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
-  UBSAN_OPTIONS: "halt_on_error=1"
+  UBSAN_OPTIONS: "halt_on_error=1,print_stacktrace=1"
 
 jobs:
   build:
@@ -100,6 +100,16 @@ jobs:
       run: |
         set -e
         ./.github/workflows/Build.sh
+    - name: Stage deploy artifact
+      shell: bash
+      run: mv Artifacts/Deploy.tar.zst "$DeployArtifact"
+      env:
+        DeployArtifact: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
+    - uses: actions/upload-artifact@v7
+      with:
+        path: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
+        archive: false
+        if-no-files-found: error
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
@@ -114,57 +124,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.architecture == 'arm64' && '[{"os":"macos-14","display_os":"14"},{"os":"macos-15","display_os":"15"},{"os":"macos-26","display_os":"26"}]' || '[{"os":"macos-15-intel","display_os":"15"},{"os":"macos-26-intel","display_os":"26"}]') }}
+        include: |-
+          ${{ fromJSON(
+            inputs.architecture == 'arm64' && '[
+              {"os":"macos-14","display_os":"14"},
+              {"os":"macos-15","display_os":"15"},
+              {"os":"macos-26","display_os":"26"}
+            ]' || '[
+              {"os":"macos-15-intel","display_os":"15"},
+              {"os":"macos-26-intel","display_os":"26"}
+            ]'
+          ) }}
     steps:
+    - uses: actions/checkout@v6
+      with:
+        sparse-checkout: .github
+        persist-credentials: false
     - uses: actions/download-artifact@v8
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
+        name: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
         path: Artifacts
+    - name: Prepare artifacts
+      shell: bash
+      run: mv "$DeployArtifact" Artifacts/Deploy.tar.zst
+      env:
+        DeployArtifact: Artifacts/Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
     - name: Run tests
       shell: bash
-      run: |
-        set -e
-        if ! which gtar; then
-          brew install gnu-tar --quiet
-        fi
-        if ! which zstd; then
-          brew install zstd --quiet
-        fi
-        if ! which node; then
-          brew install node --quiet
-        fi
-        if ! which npm; then
-          brew install npm --quiet
-        fi
-        PostgresBin=""
-        for Formula in postgresql@18 postgresql@17 postgresql@16 postgresql@15 postgresql; do
-          Candidate="$(brew --prefix "$Formula" 2>/dev/null || true)/bin"
-          if [[ -x "$Candidate/initdb" && -x "$Candidate/pg_ctl" ]]; then
-            PostgresBin="$Candidate"
-            break
-          fi
-        done
-        if [[ -z "$PostgresBin" ]]; then
-          brew install postgresql@17 --quiet
-          PostgresBin="$(brew --prefix postgresql@17)/bin"
-        fi
-        export PATH="$PostgresBin:$PATH"
-        initdb --version
-        pg_ctl --version
-        pwd
-        echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        ArtifactsPath="$PWD/Artifacts/Deploy.tar.zst"
-        sudo rm -rf /opt/Deploy
-        sudo mkdir -p /opt/Deploy
-        sudo chown $USER /opt/Deploy
-        cd /opt/Deploy
-        export MalterlibCrashDumpDir="$PWD/CrashDumps"
-        gtar -xf "$ArtifactsPath"
-        TestsDirName=`find Tests* -maxdepth 0`
-        if [[ "$TestsDirName" != "Tests" ]]; then
-          mv "$TestsDirName" Tests
-        fi
-        cd Tests
-        ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
-        sudo -E ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
-        exit 0
+      run: ./.github/workflows/Run_macOS_Tests.sh

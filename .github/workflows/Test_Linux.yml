@@ -56,7 +56,7 @@ env:
   MaximizeDiskSpaceDirectories: "/usr/local/lib/android /usr/share/swift /usr/local/share/powershell /usr/lib/jvm /opt/az /usr/lib/llvm-* /usr/share/miniconda /usr/local/julia* /opt/microsoft/msedge /usr/lib/dotnet /usr/share/az_* /usr/lib/firefox /opt/microsoft/powershell /usr/share/gradle-* /usr/share/kotlinc /opt/ghc /opt/hostedtoolcache/CodeQL"
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
-  UBSAN_OPTIONS: "halt_on_error=1"
+  UBSAN_OPTIONS: "halt_on_error=1,print_stacktrace=1"
 
 jobs:
   build:
@@ -68,6 +68,7 @@ jobs:
       BuildArchitecture: ${{ inputs.architecture }}
       BuildConfiguration: ${{ inputs.configuration }}
       BuildSanitizer: ${{ inputs.sanitizer }}
+      HostBinariesArchitecture: ${{ inputs.architecture == 'x86' && 'x64' || inputs.architecture }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
     - name: Check disk space
@@ -172,19 +173,20 @@ jobs:
         git checkout -B "github-pr-${{ github.event.pull_request.number }}"
         git config --global --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
         git config --global --add remote.origin.fetch '+refs/pull/*/merge:refs/remotes/origin/pull/*/merge'
+    # The Malterlib binaries are host tools, so x86 builds (running on x64 hosts) use the x64 binaries
     - name: Cache binary repositories
       uses: actions/cache/restore@v5
       with:
-        path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
-        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture)) }}
+        path: Binaries/Malterlib/${{ inputs.platform }}/${{ env.HostBinariesArchitecture }}
+        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, env.HostBinariesArchitecture)) }}
         restore-keys: |
-          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-
     - name: Maximize disk space
       if: steps.disk_space.outputs.low_space == 'true'
       shell: bash
       run: |
         df -h --sync /
-        MToolPath="Binaries/Malterlib/$BuildPlatform/$BuildArchitecture/MTool"
+        MToolPath="Binaries/Malterlib/$BuildPlatform/$HostBinariesArchitecture/MTool"
         if [[ -f "$MToolPath" ]]; then
           sudo "$MToolPath" DeleteRecursiveParallel $MaximizeDiskSpaceDirectories || sudo rm -rf $MaximizeDiskSpaceDirectories
         else
@@ -198,8 +200,8 @@ jobs:
     - name: Cache Linux SDK binary repository
       uses: actions/cache/restore@v5
       with:
-        path: Binaries/MalterlibSDK/Linux/Ubuntu/${{ inputs.architecture }}
-        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-Ubuntu-{0}.MRepo', inputs.architecture)) }}
+        path: Binaries/MalterlibSDK/Linux/${{ inputs.architecture == 'x86' && 'Debian' || 'Ubuntu' }}/${{ inputs.architecture }}
+        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-{0}-{1}.MRepo', (inputs.architecture == 'x86' && 'Debian' || 'Ubuntu'), inputs.architecture)) }}
         restore-keys: |
           malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-
     - name: Restore llvm-project
@@ -215,6 +217,16 @@ jobs:
       run: |
         set -e
         ./.github/workflows/Build.sh
+    - name: Stage deploy artifact
+      shell: bash
+      run: mv Artifacts/Deploy.tar.zst "$DeployArtifact"
+      env:
+        DeployArtifact: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
+    - uses: actions/upload-artifact@v7
+      with:
+        path: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
+        archive: false
+        if-no-files-found: error
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
@@ -228,9 +240,51 @@ jobs:
     timeout-minutes: 70
     strategy:
       fail-fast: false
+      # Native runner entries cover all configurations. Container entries cover
+      # the popular distributions for non-sanitizer configurations, and are the
+      # only way to test x86 since the 64-bit runners cannot run x86 binaries
+      # natively.
       matrix:
-        include: ${{ fromJSON(inputs.architecture == 'arm64' && '[{"os":"ubuntu-22.04-arm","display_os":"22.04"},{"os":"ubuntu-24.04-arm","display_os":"24.04"}]' || '[{"os":"ubuntu-22.04","display_os":"22.04"},{"os":"ubuntu-24.04","display_os":"24.04"}]') }}
+        include: |-
+          ${{ fromJSON(
+            inputs.architecture == 'x86' && '[
+              {"os":"ubuntu-24.04","image":"i386/debian:12","display_os":"Debian 12 i386","platform":"linux/386","setarch":"linux32"}
+            ]'
+            || inputs.architecture == 'arm64' && (inputs.sanitizer == 'None' && '[
+              {"os":"ubuntu-22.04-arm","display_os":"22.04"},
+              {"os":"ubuntu-24.04-arm","display_os":"24.04"},
+              {"os":"ubuntu-26.04-arm","display_os":"26.04"},
+              {"os":"ubuntu-24.04-arm","image":"debian:12","display_os":"Debian 12"},
+              {"os":"ubuntu-24.04-arm","image":"debian:13","display_os":"Debian 13"},
+              {"os":"ubuntu-24.04-arm","image":"fedora:latest","display_os":"Fedora"},
+              {"os":"ubuntu-24.04-arm","image":"rockylinux/rockylinux:10","display_os":"Rocky 10"},
+              {"os":"ubuntu-24.04-arm","image":"opensuse/tumbleweed","display_os":"openSUSE TW"}
+            ]' || '[
+              {"os":"ubuntu-22.04-arm","display_os":"22.04"},
+              {"os":"ubuntu-24.04-arm","display_os":"24.04"},
+              {"os":"ubuntu-26.04-arm","display_os":"26.04"}
+            ]')
+            || (inputs.sanitizer == 'None' && '[
+              {"os":"ubuntu-22.04","display_os":"22.04"},
+              {"os":"ubuntu-24.04","display_os":"24.04"},
+              {"os":"ubuntu-26.04","display_os":"26.04"},
+              {"os":"ubuntu-24.04","image":"debian:12","display_os":"Debian 12"},
+              {"os":"ubuntu-24.04","image":"debian:13","display_os":"Debian 13"},
+              {"os":"ubuntu-24.04","image":"fedora:latest","display_os":"Fedora"},
+              {"os":"ubuntu-24.04","image":"archlinux:latest","display_os":"Arch"},
+              {"os":"ubuntu-24.04","image":"rockylinux/rockylinux:10","display_os":"Rocky 10"},
+              {"os":"ubuntu-24.04","image":"opensuse/tumbleweed","display_os":"openSUSE TW"}
+            ]' || '[
+              {"os":"ubuntu-22.04","display_os":"22.04"},
+              {"os":"ubuntu-24.04","display_os":"24.04"},
+              {"os":"ubuntu-26.04","display_os":"26.04"}
+            ]')
+          ) }}
     steps:
+    - uses: actions/checkout@v6
+      with:
+        sparse-checkout: .github
+        persist-credentials: false
     - name: Maximize disk space
       shell: bash
       run: |
@@ -239,8 +293,13 @@ jobs:
         df -h
     - uses: actions/download-artifact@v8
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
+        name: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
         path: Artifacts
+    - name: Prepare artifacts
+      shell: bash
+      run: mv "$DeployArtifact" Artifacts/Deploy.tar.zst
+      env:
+        DeployArtifact: Artifacts/Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
     - name: Swap space report before modification
       shell: bash
       run: |
@@ -293,68 +352,10 @@ jobs:
         free -h
         echo
 
-    - name: Install dependencies
-      shell: bash
-      run: |
-        # To reproduce bug where getgrnam_r returns errors when user is not found
-        sudo apt update
-        sudo apt install sssd
-
-    - name: Configure PostgreSQL tools
-      shell: bash
-      run: |
-        set -e
-        ConfigurePostgresPath() {
-          while IFS= read -r PostgresBin; do
-            if [[ -x "$PostgresBin/initdb" && -x "$PostgresBin/pg_ctl" ]]; then
-              echo "$PostgresBin" >> "$GITHUB_PATH"
-              "$PostgresBin/initdb" --version
-              "$PostgresBin/pg_ctl" --version
-              return 0
-            fi
-          done < <(printf '%s\n' /usr/lib/postgresql/*/bin | sort -Vr)
-
-          return 1
-        }
-
-        if ConfigurePostgresPath; then
-          exit 0
-        fi
-
-        sudo apt install --yes postgresql
-
-        if ConfigurePostgresPath; then
-          exit 0
-        fi
-
-        echo "PostgreSQL initdb and pg_ctl were not found" >&2
-        exit 1
-
     - name: Run tests
       shell: bash
-      run: |
-        pwd
-        loginctl enable-linger runner
-        sleep 1
-        echo $XDG_RUNTIME_DIR
-        export XDG_RUNTIME_DIR=/run/user/$UID
-        echo $XDG_RUNTIME_DIR
-        env
-        ps aux --forest
-        ArtifactsPath="$PWD/Artifacts/Deploy.tar.zst"
-        systemctl status || true
-        echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
-        sudo rm -rf /Deploy
-        sudo mkdir -p /Deploy
-        sudo chown $USER /Deploy
-        cd /Deploy
-        export MalterlibCrashDumpDir="$PWD/CrashDumps"
-        tar -xf "$ArtifactsPath"
-        TestsDirName=`find Tests* -maxdepth 0`
-        if [[ "$TestsDirName" != "Tests" ]]; then
-          mv "$TestsDirName" Tests
-        fi
-        cd Tests
-        ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
-        sudo -E ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
-        exit 0
+      run: ./.github/workflows/Run_Linux_Tests.sh
+      env:
+        Image: ${{ matrix.image }}
+        ImagePlatform: ${{ matrix.platform }}
+        Setarch: ${{ matrix.setarch }}
