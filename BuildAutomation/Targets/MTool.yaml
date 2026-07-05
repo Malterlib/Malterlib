@@ -1,0 +1,136 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+target:
+  name: "Malterlib Tool"
+
+options:
+  static:
+    MalterlibSigning: 0
+    ProductVersionMajor: 1
+    ProductVersionMinor: 1
+    Malterlib_UseCachedEnvironment: false
+    Malterlib_UseUserSettings: false
+    MalterlibStripSymbols: true
+    MalterlibDeploySymbols: false
+    MalterlibBuildShowProgress: false
+    EnableDebugConfig: false
+    EnableReleaseTestingConfig: false
+    EnableReleaseConfig: true
+  dynamic:
+    ProductVersionRevision:
+      type: int
+      default: 0
+      flags: [Hide, BuildCounter]
+    MalterlibCloud_VersionUploadToolName:
+      type: string
+      default: "MalterlibCloud"
+    MalterlibCloud_VersionUploadHostsDefault:
+      type: string
+      default: ""
+    Build_macOS:
+      type: bint
+      default: 1
+    Build_Linux:
+      type: bint
+      default: 1
+    Build_Windows:
+      type: bint
+      default: 1
+    Build_x64:
+      type: bint
+      default: 1
+    Build_x86:
+      type: bint
+      default: 1
+    Build_arm64:
+      type: bint
+      default: 1
+
+preStage:
+  commands:
+    - name: "Pre Build Clean (Windows)"
+      platform: Windows
+      executable: "Malterlib/Core/BuildScripts/Prebuild.sh"
+      parameters: "Malterlib MTool"
+    - name: "Pre Build Clean (macOS)"
+      platform: macOS
+      executable: "Malterlib/Core/BuildScripts/Prebuild.sh"
+      parameters: "Malterlib MTool"
+
+stages:
+  - name: "Build"
+    commands:
+      - name: "Build MTool Windows x64"
+        platform: Windows
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "MTool Windows x64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Windows: "1"
+          Build_x64: "1"
+      - name: "Build MTool Windows arm64"
+        platform: Windows
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "MTool Windows arm64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Windows: "1"
+          Build_arm64: "1"
+      - name: "Build MTool macOS x64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "MTool macOS x64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_macOS: "1"
+          Build_x64: "1"
+      - name: "Build MTool macOS arm64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "MTool macOS arm64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_macOS: "1"
+          Build_arm64: "1"
+      - name: "Build MTool Linux x64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "MTool Linux x64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Linux: "1"
+          Build_x64: "1"
+      - name: "Build MTool Linux arm64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "MTool Linux arm64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Linux: "1"
+          Build_arm64: "1"
+      - name: "Build MTool Linux x86"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "MTool Linux x86 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Linux: "1"
+          Build_x86: "1"
+  - name: "Deploy"
+    commands:
+      - name: "Deploy MTool to Version Manager"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/DeployFilesToVersionManager.sh"
+        parameters: "BuildResults/* MTool"
+
+postStage:
+  commands:
+    - name: "Post Build Clean (Windows)"
+      platform: Windows
+      executable: "Malterlib/Core/BuildScripts/Postbuild.sh"
+      parameters: "MTool"
+    - name: "Post Build Clean (macOS)"
+      platform: macOS
+      executable: "Malterlib/Core/BuildScripts/Postbuild.sh"
+      parameters: "MTool"
