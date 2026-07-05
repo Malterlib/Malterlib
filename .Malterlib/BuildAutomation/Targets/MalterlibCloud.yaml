@@ -104,14 +104,12 @@ options:
 
 preStage:
   commands:
-    - name: "Pre Build Clean (macOS)"
+    - name: "Update Repositories (macOS)"
       platform: macOS
-      executable: "Malterlib/Core/BuildScripts/Prebuild.sh"
-      parameters: "Malterlib Apps_Malterlib_All"
-    - name: "Pre Build Clean (Windows)"
+      executable: ".Malterlib/BuildAutomation/Scripts/UpdateRepos.sh"
+    - name: "Update Repositories (Windows)"
       platform: Windows
-      executable: "Malterlib/Core/BuildScripts/Prebuild.sh"
-      parameters: "Malterlib Apps_Malterlib_All"
+      executable: ".Malterlib/BuildAutomation/Scripts/UpdateRepos.sh"
 
 stages:
   - name: "Build"
