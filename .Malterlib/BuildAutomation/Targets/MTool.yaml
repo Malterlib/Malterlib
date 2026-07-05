@@ -11,6 +11,7 @@ options:
     ProductVersionMinor: 1
     Malterlib_UseCachedEnvironment: false
     Malterlib_UseUserSettings: false
+    MalterlibRepositoryHardReset: true
     MalterlibStripSymbols: true
     MalterlibDeploySymbols: false
     MalterlibBuildShowProgress: false
