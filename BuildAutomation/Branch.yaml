@@ -1,0 +1,10 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+branch:
+  displayName: "Malterlib"
+targets:
+  - id: "MTool"
+    file: "BuildAutomation/Targets/MTool.yaml"
+  - id: "MalterlibCloud"
+    file: "BuildAutomation/Targets/MalterlibCloud.yaml"
