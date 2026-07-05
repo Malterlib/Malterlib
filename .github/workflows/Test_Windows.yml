@@ -65,6 +65,7 @@ jobs:
       BuildArchitecture: ${{ inputs.architecture }}
       BuildConfiguration: ${{ inputs.configuration }}
       BuildSanitizer: ${{ inputs.sanitizer }}
+      HostBinariesArchitecture: ${{ inputs.architecture == 'x86' && 'x64' || inputs.architecture }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
     - name: Setup git config
@@ -113,13 +114,14 @@ jobs:
     #     MaximumSize: 64GB
     #     DiskRoot: "C:"
     #     SourcePath: ${{ github.workspace }}/.github/workflows/SetPageFileSize.cs
+    # The Malterlib binaries are host tools, so x86 builds (running on x64 hosts) use the x64 binaries
     - name: Cache binary repositories
       uses: actions/cache/restore@v5
       with:
-        path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
-        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture)) }}
+        path: Binaries/Malterlib/${{ inputs.platform }}/${{ env.HostBinariesArchitecture }}
+        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, env.HostBinariesArchitecture)) }}
         restore-keys: |
-          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-
     - name: Restore llvm-project
       uses: actions/cache/restore@v5
       with:

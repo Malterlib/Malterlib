@@ -301,3 +301,27 @@ jobs:
       sanitizer: ${{ matrix.build.sanitizer }}
       display_name: Win x64 ${{ matrix.build.name }}
     name: Win x64 ${{ matrix.build.name }}
+
+  win_x86:
+    needs: warm_win_x64
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+        - configuration: Debug
+          sanitizer: 'None'
+          name: Debug
+        - configuration: 'Release Testing (Tests)'
+          sanitizer: 'None'
+          name: RelTest
+        - configuration: 'Release (Tests)'
+          sanitizer: 'None'
+          name: Release
+    uses: ./.github/workflows/Test_Windows.yml
+    with:
+      platform: Windows
+      architecture: x86
+      configuration: ${{ matrix.build.configuration }}
+      sanitizer: ${{ matrix.build.sanitizer }}
+      display_name: Win x86 ${{ matrix.build.name }}
+    name: Win x86 ${{ matrix.build.name }}
