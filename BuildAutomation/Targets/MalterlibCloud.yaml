@@ -1,0 +1,171 @@
+# Copyright © Unbroken AB
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+target:
+  name: "Malterlib Apps"
+
+options:
+  static:
+    ProductVersionMajor: 1
+    ProductVersionMinor: 2
+    MalterlibSigning: false
+    MalterlibStripSymbols: true
+    Malterlib_UseCachedEnvironment: false
+    Malterlib_UseUserSettings: false
+    MalterlibCloud_VersionUploadHosts: "o6jiKTAKYEjWYLZXK;myDiBcy5gGvBJe87p;eH7f39kQZvmscgD72"
+    MalterlibDeploySymbols: false
+    MalterlibBuildShowProgress: false
+    MSVCLinkTimeCodeGenerationThreads: 4
+    MalterlibMSBuildBuildMaxParallelProjects: 8
+    Malterlib_App_Enable_Test: false
+    Malterlib_App_Enable_CloudAPIManager: false
+    Malterlib_App_Enable_DDPBridgeHelper: false
+    Malterlib_App_Enable_MongoManager: false
+    EnableDebugConfig: false
+    EnableReleaseTestingConfig: false
+    EnableReleaseConfig: true
+  dynamic:
+    ProductVersionRevision:
+      type: int
+      default: 0
+      flags: [Hide, BuildCounter]
+    TagForTest:
+      type: bint
+      default: 0
+    TagForStaging:
+      type: bint
+      default: 0
+    TagForBuildStaging:
+      type: bint
+      default: 0
+    Build_macOS:
+      type: bint
+      default: 1
+    Build_Linux:
+      type: bint
+      default: 1
+    Build_Windows:
+      type: bint
+      default: 1
+    Malterlib_App_Enable_AppDistributionManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_AppManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_BackupManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_BuildCoordinator:
+      type: bool
+      default: true
+    Malterlib_App_Enable_BuildRunner:
+      type: bool
+      default: true
+    Malterlib_App_Enable_CloudClient:
+      type: bool
+      default: true
+    Malterlib_App_Enable_CloudManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_KeyManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_SecretsManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_TunnelProxyManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_VersionManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_GitPolicyManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_MongoCertificateManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_AcmeManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_WebCertificateManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_DebugManager:
+      type: bool
+      default: true
+    Malterlib_App_Enable_DebugManagerClient:
+      type: bool
+      default: true
+    MalterlibCloud_VersionUploadToolName:
+      type: string
+      default: "MalterlibCloud"
+
+preStage:
+  commands:
+    - name: "Pre Build Clean (macOS)"
+      platform: macOS
+      executable: "Malterlib/Core/BuildScripts/Prebuild.sh"
+      parameters: "Malterlib Apps_Malterlib_All"
+    - name: "Pre Build Clean (Windows)"
+      platform: Windows
+      executable: "Malterlib/Core/BuildScripts/Prebuild.sh"
+      parameters: "Malterlib Apps_Malterlib_All"
+
+stages:
+  - name: "Build"
+    commands:
+      - name: "Build Apps Linux x64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "Apps_Malterlib_All Linux x64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Linux: "1"
+      - name: "Build Apps Linux arm64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "Apps_Malterlib_All Linux arm64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Linux: "1"
+      - name: "Build Apps Windows x64"
+        platform: Windows
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "Apps_Malterlib_All Windows x64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Windows: "1"
+      - name: "Build Apps Windows arm64"
+        platform: Windows
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "Apps_Malterlib_All Windows arm64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_Windows: "1"
+      - name: "Build Apps macOS x64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "Apps_Malterlib_All macOS x64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_macOS: "1"
+      - name: "Build Apps macOS arm64"
+        platform: macOS
+        executable: "Malterlib/Core/BuildScripts/BuildWorkspace.sh"
+        parameters: "Apps_Malterlib_All macOS arm64 Release"
+        aloneOnRunner: true
+        conditions:
+          Build_macOS: "1"
+
+postStage:
+  commands:
+    - name: "Post Build Clean (macOS)"
+      platform: macOS
+      executable: "Malterlib/Core/BuildScripts/Postbuild.sh"
+      parameters: "Apps_Malterlib_All"
+    - name: "Post Build Clean (Windows)"
+      platform: Windows
+      executable: "Malterlib/Core/BuildScripts/Postbuild.sh"
+      parameters: "Apps_Malterlib_All"
