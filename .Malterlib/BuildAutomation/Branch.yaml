@@ -5,6 +5,6 @@ branch:
   displayName: "Malterlib"
 targets:
   - id: "MTool"
-    file: "BuildAutomation/Targets/MTool.yaml"
+    file: ".Malterlib/BuildAutomation/Targets/MTool.yaml"
   - id: "MalterlibCloud"
-    file: "BuildAutomation/Targets/MalterlibCloud.yaml"
+    file: ".Malterlib/BuildAutomation/Targets/MalterlibCloud.yaml"
