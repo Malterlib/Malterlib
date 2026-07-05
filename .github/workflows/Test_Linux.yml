@@ -352,6 +352,32 @@ jobs:
         free -h
         echo
 
+    # The sanitizer runtimes fall back to addr2line for symbolization when
+    # llvm-symbolizer is not available, and the addr2line on older runners
+    # cannot read zstd-compressed debug sections, which crashes TSan (and the
+    # process under test) when it tries to symbolize a report. Install the
+    # LLVM 22 symbolizer matching the toolchain and point the sanitizers at
+    # it. Container entries are excluded: apt.llvm.org has no i386 packages,
+    # and the container distributions ship an addr2line that handles zstd.
+    - name: Install LLVM 22 symbolizer
+      if: inputs.sanitizer != 'None' && !matrix.image
+      shell: bash
+      run: |
+        set -o pipefail
+        sudo apt-get update
+        if ! sudo apt-get install --yes llvm-22 2>/dev/null; then
+          source /etc/os-release
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt-llvm-org.asc >/dev/null
+          echo "deb http://apt.llvm.org/$VERSION_CODENAME/ llvm-toolchain-$VERSION_CODENAME-22 main" | sudo tee /etc/apt/sources.list.d/apt-llvm-org.list
+          sudo apt-get update
+          sudo apt-get install --yes llvm-22
+        fi
+        Symbolizer=/usr/lib/llvm-22/bin/llvm-symbolizer
+        "$Symbolizer" --version
+        echo "ASAN_OPTIONS=$ASAN_OPTIONS,external_symbolizer_path=$Symbolizer" >> "$GITHUB_ENV"
+        echo "TSAN_OPTIONS=$TSAN_OPTIONS,external_symbolizer_path=$Symbolizer" >> "$GITHUB_ENV"
+        echo "UBSAN_OPTIONS=$UBSAN_OPTIONS,external_symbolizer_path=$Symbolizer" >> "$GITHUB_ENV"
+
     - name: Run tests
       shell: bash
       run: ./.github/workflows/Run_Linux_Tests.sh
