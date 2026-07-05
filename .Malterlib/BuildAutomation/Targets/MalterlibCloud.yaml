@@ -12,6 +12,7 @@ options:
     MalterlibStripSymbols: true
     Malterlib_UseCachedEnvironment: false
     Malterlib_UseUserSettings: false
+    MalterlibRepositoryHardReset: true
     MalterlibCloud_VersionUploadHosts: "o6jiKTAKYEjWYLZXK;myDiBcy5gGvBJe87p;eH7f39kQZvmscgD72"
     MalterlibDeploySymbols: false
     MalterlibBuildShowProgress: false
