@@ -79,13 +79,15 @@ jobs:
         git checkout -B "github-pr-${{ github.event.pull_request.number }}"
         git config --global --add remote.origin.fetch '+refs/pull/*/head:refs/remotes/origin/pull/*/head'
         git config --global --add remote.origin.fetch '+refs/pull/*/merge:refs/remotes/origin/pull/*/merge'
+    # actions/cache needs zstd before the binary repositories are restored, so take it from
+    # the bootstrap package rather than installing a separate copy. The Chocolatey package
+    # only ships an x64 build, which would run emulated on the arm64 runner.
     - name: Setup zstd cache tool
       if: runner.os == 'Windows'
-      shell: pwsh
+      shell: bash
       run: |
-        if (!(Get-Command zstd -ErrorAction SilentlyContinue)) {
-          choco install zstandard --version 1.5.7.20250308 --no-progress --yes
-        }
+        ./mib bootstrap_only
+        cygpath -w "$HOME/.Malterlib/bootstrap/$(cat Malterlib/Core/Bootstrap.version)" >> "$GITHUB_PATH"
     # The Malterlib binaries are host tools; x86 builds run on x64 hosts whose binaries are warmed by the x64 job
     - name: Cache binary repositories
       id: cache-binaries
