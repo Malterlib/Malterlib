@@ -103,7 +103,7 @@ jobs:
           name: RelTest
         - configuration: 'Release Testing (Tests)'
           sanitizer: 'None'
-          non_static_thread_locals: true
+          no_assume: true
           name: RelTest NoA # No assume
         - configuration: 'Release (Tests)'
           sanitizer: 'None'
@@ -123,7 +123,7 @@ jobs:
       architecture: arm64
       configuration: ${{ matrix.build.configuration }}
       sanitizer: ${{ matrix.build.sanitizer }}
-      non_static_thread_locals: ${{ matrix.build.non_static_thread_locals || false }}
+      no_assume: ${{ matrix.build.no_assume || false }}
       display_name: Linux arm64 ${{ matrix.build.name }}
     name: Linux arm64 ${{ matrix.build.name }}
 
@@ -141,7 +141,7 @@ jobs:
           name: RelTest
         - configuration: 'Release Testing (Tests)'
           sanitizer: 'None'
-          non_static_thread_locals: true
+          no_assume: true
           name: RelTest NoA # No assume
         - configuration: 'Release (Tests)'
           sanitizer: 'None'
@@ -161,7 +161,7 @@ jobs:
       architecture: x64
       configuration: ${{ matrix.build.configuration }}
       sanitizer: ${{ matrix.build.sanitizer }}
-      non_static_thread_locals: ${{ matrix.build.non_static_thread_locals || false }}
+      no_assume: ${{ matrix.build.no_assume || false }}
       display_name: Linux x64 ${{ matrix.build.name }}
     name: Linux x64 ${{ matrix.build.name }}
 
@@ -179,7 +179,7 @@ jobs:
           name: RelTest
         - configuration: 'Release Testing (Tests)'
           sanitizer: 'None'
-          non_static_thread_locals: true
+          no_assume: true
           name: RelTest NoA # No assume
         - configuration: 'Release (Tests)'
           sanitizer: 'None'
@@ -196,7 +196,7 @@ jobs:
       architecture: x86
       configuration: ${{ matrix.build.configuration }}
       sanitizer: ${{ matrix.build.sanitizer }}
-      non_static_thread_locals: ${{ matrix.build.non_static_thread_locals || false }}
+      no_assume: ${{ matrix.build.no_assume || false }}
       display_name: Linux x86 ${{ matrix.build.name }}
     name: Linux x86 ${{ matrix.build.name }}
 

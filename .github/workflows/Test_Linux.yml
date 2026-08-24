@@ -19,7 +19,7 @@ on:
         required: false
         type: string
         default: 'None'
-      non_static_thread_locals:
+      no_assume:
         description: Build the workspace without static thread locals or an assumed Malterlib host
         required: false
         type: boolean
@@ -73,8 +73,8 @@ jobs:
       BuildArchitecture: ${{ inputs.architecture }}
       BuildConfiguration: ${{ inputs.configuration }}
       BuildSanitizer: ${{ inputs.sanitizer }}
-      MalterlibThread_LinuxUseStaticThreadLocal: ${{ inputs.non_static_thread_locals && 'false' || 'true' }}
-      Malterlib_AssumeMalterlibHost: ${{ inputs.non_static_thread_locals && 'false' || 'true' }}
+      MalterlibThread_LinuxUseStaticThreadLocal: ${{ inputs.no_assume && 'false' || 'true' }}
+      Malterlib_AssumeMalterlibHost: ${{ inputs.no_assume && 'false' || 'true' }}
       HostBinariesArchitecture: ${{ inputs.architecture == 'x86' && 'x64' || inputs.architecture }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
@@ -228,16 +228,16 @@ jobs:
       shell: bash
       run: mv Artifacts/Deploy.tar.zst "$DeployArtifact"
       env:
-        DeployArtifact: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.non_static_thread_locals && ' NoA' || '' }}.tar.zst
+        DeployArtifact: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}.tar.zst
     - uses: actions/upload-artifact@v7
       with:
-        path: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.non_static_thread_locals && ' NoA' || '' }}.tar.zst
+        path: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}.tar.zst
         archive: false
         if-no-files-found: error
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.non_static_thread_locals && ' NoA' || '' }}
+        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}
         path: Artifacts
 
   test_linux:
@@ -300,13 +300,13 @@ jobs:
         df -h
     - uses: actions/download-artifact@v8
       with:
-        name: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.non_static_thread_locals && ' NoA' || '' }}.tar.zst
+        name: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}.tar.zst
         path: Artifacts
     - name: Prepare artifacts
       shell: bash
       run: mv "$DeployArtifact" Artifacts/Deploy.tar.zst
       env:
-        DeployArtifact: Artifacts/Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.non_static_thread_locals && ' NoA' || '' }}.tar.zst
+        DeployArtifact: Artifacts/Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}.tar.zst
     - name: Swap space report before modification
       shell: bash
       run: |
