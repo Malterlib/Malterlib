@@ -987,9 +987,16 @@ Extensive algorithm library with modular design:
 
 ### Iterators
 - **Character Iterators**: Navigate by characters/codepoints
-- **Unicode Iterator**: Proper Unicode grapheme cluster iteration
+- **Unicode Iterator**: Unicode code-point iteration
 - **UTF Encode Iterators**: Convert between encodings during iteration
 - **Output Iterators**: Write encoded data during iteration
+
+UTF-8 and UTF-16 character iterators preserve every code point, including leading
+U+FEFF and U+FFFE. They do not detect or consume BOMs. UTF-16 iterator input is
+already in native byte order. File/stream decoding (`fg_ReadTextStream` and
+`CFile::fs_ReadString*`) handles signatures and byte order before string processing.
+Keep BOM removal at those decoding boundaries; do not add stripping or restoration
+to ordinary string operations.
 
 ## Module-Specific Conventions
 
