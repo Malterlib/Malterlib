@@ -1,4 +1,4 @@
-<!-- GENERATED FILE: Do not edit manually. Run ./Malterlib/Core/Tools/generate_agents.py to regenerate. -->
+<!-- GENERATED FILE: Do not edit manually. Run ./mib update-agents to regenerate. -->
 
 <!-- Begin include: CLAUDE.md -->
 # AI instructions
@@ -88,6 +88,9 @@ MalterlibBuildShowProgress=false ./mib test
 # Get repository status
 ./mib status
 
+# Regenerate AGENTS.md from CLAUDE.md and its Markdown includes
+./mib update-agents
+
 # Setup prerequisites (macOS only)
 ./mib setup
 
@@ -167,6 +170,9 @@ Located in `External/` directory:
 3. Generate and build with `MalterlibBuildShowProgress=false ./mib build [workspace]`
 
 ### Running Tests
+
+Always read `Malterlib/Test/CLAUDE.md` before writing or modifying tests in any module.
+
 1. Build and run tests: `./mib test`
 2. To run specific tests: `/opt/Deploy/Tests/RunAllTests --paths '["Module/Test/Name"]'`
 3. Build and run specific tests: `./mib test --paths '["Module/Test/Name"]'`
@@ -175,6 +181,7 @@ Located in `External/` directory:
 ### Repository Management
 - Check status: `./mib status`
 - Update all repos: `./mib update-repos`
+- After creating or rewriting commits in sub-repositories, run `./mib repo-commit` from the workspace root to update parent `.MRepo` references and generate or refresh the `Update repositories` commits. Use this command instead of manually editing or committing repository-reference files.
 - Switch branch: `./mib branch [BranchName]`
 - Push changes: `./mib push`
 - `mib` supports git worktrees, but avoid them for agent-driven workflows in this repository. Many changes land inside the `Malterlib/*` sub-repositories, and syncing those changes back from the top-level worktree does not behave correctly.
