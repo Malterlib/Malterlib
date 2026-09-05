@@ -25,10 +25,10 @@ codex --yolo review --commit <sha>
 codex --yolo review "Review this commit."
 
 # Review all changes compared to master across all Malterlib repositories
-codex --yolo review "Review all changes compared to master across all repositories. First run ./mib list-commits -l --no-color --terminal-width=200 to discover the changed repositories and commits, then review those changes."
+codex --yolo review "Review all changes compared to master across all repositories. First run ./mib list-commits -l --no-color to discover the changed repositories and commits, then review those changes."
 ```
 
-When the user asks to review all changes compared to `master`, use the custom-prompt form above instead of `--base master`. The command `./mib list-commits -l --no-color --terminal-width=200` is required so the nested reviewer finds changes across all repositories, not just the current Git repository.
+When the user asks to review all changes compared to `master`, use the custom-prompt form above instead of `--base master`. The command `./mib list-commits -l --no-color` is required so the nested reviewer finds changes across all repositories, not just the current Git repository.
 
 ## CRITICAL — waiting for codex results
 
@@ -42,7 +42,7 @@ When the user asks to review all changes compared to `master`, use the custom-pr
 - **When native background mode is unavailable, run `codex --yolo review` in the foreground, redirect it to a log file, and increase or disable the timeout so the tool can wait for completion.** Do not append `&` or otherwise detach the process yourself.
 - The scope flags `--uncommitted`, `--base`, and `--commit` are **mutually exclusive with the `[PROMPT]` argument**. Passing both fails with `error: the argument '--<flag>' cannot be used with '[PROMPT]'`. Use a scope flag with no prompt, or a prompt with no scope flag — never both.
 - `codex review --uncommitted` includes staged + unstaged + untracked. There is no built-in way to scope to *just* unstaged; you'd have to stash the staged changes first, or accept that all three are reviewed.
-- For "review all changes compared to master" in this repository, use a custom prompt that tells the nested reviewer to run `./mib list-commits -l --no-color --terminal-width=200`; do not use `--base master` for that all-repository case.
+- For "review all changes compared to master" in this repository, use a custom prompt that tells the nested reviewer to run `./mib list-commits -l --no-color`; do not use `--base master` for that all-repository case.
 - Run from inside the relevant sub-repo (e.g. `Malterlib/BuildSystem`) to scope the review and let codex resolve paths correctly.
 - Codex output is noisy and large — easily 50–500 KB of exec traces before the actual findings. Prefer redirecting stdout/stderr to a log file (or using the harness's persisted output file when background mode provides one), then inspect only the end of that file to find the final findings block. Do not read the whole transcript unless you need extra context.
 - `--yolo` applies to the nested Codex reviewer only. It does not remove the parent harness sandbox.
