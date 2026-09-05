@@ -52,13 +52,13 @@ if [[ "${1:-}" == "--inside-container" ]]; then
   if command -v apt-get >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install --yes --no-install-recommends ca-certificates zstd postgresql nodejs npm util-linux passwd
+    apt-get install --yes --no-install-recommends ca-certificates git zstd postgresql nodejs npm util-linux passwd
   elif command -v dnf >/dev/null 2>&1; then
-    dnf install --assumeyes ca-certificates zstd tar postgresql-server nodejs npm util-linux shadow-utils
+    dnf install --assumeyes ca-certificates git zstd tar postgresql-server nodejs npm util-linux shadow-utils
   elif command -v pacman >/dev/null 2>&1; then
-    pacman -Syu --noconfirm ca-certificates zstd postgresql nodejs npm util-linux shadow
+    pacman -Syu --noconfirm ca-certificates git zstd postgresql nodejs npm util-linux shadow
   elif command -v zypper >/dev/null 2>&1; then
-    zypper --non-interactive install ca-certificates zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow
+    zypper --non-interactive install ca-certificates git zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow
   else
     echo "No supported package manager found" >&2
     exit 1
