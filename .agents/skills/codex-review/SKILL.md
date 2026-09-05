@@ -1,11 +1,13 @@
 ---
 name: codex-review
-description: Get a second-opinion code review from a different model via `codex --yolo review`. Use when the user asks for a code review, second opinion, or sanity check on uncommitted/branch/commit changes before shipping, especially when the nested reviewer may need to run project tools. Do not use when already running inside `codex review`; never recursively invoke another Codex review.
+description: Get a second-opinion code review via `codex --yolo review`, using Codex's configured default model unless the user requests another model. Use when the user asks for a code review, second opinion, or sanity check on uncommitted/branch/commit changes before shipping, especially when the nested reviewer may need to run project tools. Do not use when already running inside `codex review`; never recursively invoke another Codex review.
 ---
 
 # Code Review with Codex
 
-Use the `codex` CLI to get a second-opinion review from a different model. Run it from the directory whose changes you want reviewed — `codex review` reads `git diff` relative to its working directory.
+Use the `codex` CLI to get a second-opinion review. Run it from the directory whose changes you want reviewed — `codex review` reads `git diff` relative to its working directory.
+
+Use Codex's configured default model. Only override the model when the user explicitly requests a different one. Otherwise, omit `--model`/`-m` and configuration overrides for `model` or `review_model`.
 
 Always invoke the nested reviewer with `--yolo` on the outer `codex` command, before the `review` subcommand: `codex --yolo review ...`. The parent agent is already running inside the harness sandbox; `--yolo` disables the nested Codex reviewer's own sandbox/approval layer so it can run project tools such as `./mib` without fighting a second sandbox.
 
