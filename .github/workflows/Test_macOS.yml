@@ -60,7 +60,7 @@ jobs:
   build:
     name: Build
     runs-on: ${{ inputs.architecture == 'arm64' && 'macos-26' || 'macos-26-intel' }}
-    timeout-minutes: 120
+    timeout-minutes: 240
     env:
       BuildPlatform: ${{ inputs.platform }}
       BuildArchitecture: ${{ inputs.architecture }}
