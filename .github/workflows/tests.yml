@@ -74,7 +74,7 @@ jobs:
     with:
       platform: Windows
       architecture: arm64
-      runner: windows-11-arm
+      runner: windows-11-vs2026-arm
       display_name: Win arm64
 
   warm_win_x64:

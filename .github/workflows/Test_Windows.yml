@@ -58,7 +58,7 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: ${{ inputs.architecture == 'arm64' && 'windows-11-arm' || 'windows-2025-vs2026' }}
+    runs-on: ${{ inputs.architecture == 'arm64' && 'windows-11-vs2026-arm' || 'windows-2025-vs2026' }}
     timeout-minutes: 240
     env:
       BuildPlatform: ${{ inputs.platform }}
@@ -171,7 +171,7 @@ jobs:
         include: |-
           ${{ fromJSON(
             inputs.architecture == 'arm64' && '[
-              {"os":"windows-11-arm","display_os":"11"}
+              {"os":"windows-11-vs2026-arm","display_os":"11"}
             ]' || '[
               {"os":"windows-2022","display_os":"2022"},
               {"os":"windows-2025-vs2026","display_os":"2025"}
