@@ -3,6 +3,10 @@
 
 set -e
 
+# The runner image comes with third party taps Homebrew no longer trusts by default, and every
+# brew call below warns about them; nothing here installs from them
+brew untap aws/tap 2>/dev/null || true
+
 if ! which gtar; then
   brew install gnu-tar --quiet
 fi
