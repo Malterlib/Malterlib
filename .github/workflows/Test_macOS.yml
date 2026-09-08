@@ -151,4 +151,22 @@ jobs:
         DeployArtifact: Artifacts/Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}.tar.zst
     - name: Run tests
       shell: bash
-      run: ./.github/workflows/Run_macOS_Tests.sh
+      run: |
+        touch "$RUNNER_TEMP/tests-started"
+        ./.github/workflows/Run_macOS_Tests.sh
+    - name: Crash reports
+      if: failure()
+      shell: bash
+      run: |
+        ls -la /opt/Deploy/CrashDumps 2>/dev/null || true
+        # Every process of the run: the test executables and the tools they launch alike
+        for Report in $(find ~/Library/Logs/DiagnosticReports -name '*.ips' -newer "$RUNNER_TEMP/tests-started" 2>/dev/null | head -10); do
+          echo "== $Report"
+          cat "$Report"
+        done
+    - uses: actions/upload-artifact@v7
+      if: failure()
+      with:
+        name: CrashDumps ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }} ${{ matrix.display_os }}
+        path: /opt/Deploy/CrashDumps
+        if-no-files-found: ignore
