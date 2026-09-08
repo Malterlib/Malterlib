@@ -239,6 +239,7 @@ jobs:
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}
         path: Artifacts
+        if-no-files-found: ignore
 
   test_linux:
     name: Test ${{ matrix.display_os }}

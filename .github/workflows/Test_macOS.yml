@@ -115,6 +115,7 @@ jobs:
       with:
         name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: Artifacts
+        if-no-files-found: ignore
 
   test_mac:
     name: Test ${{ matrix.display_os }}
