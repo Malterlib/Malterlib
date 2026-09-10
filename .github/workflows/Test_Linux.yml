@@ -245,7 +245,8 @@ jobs:
     name: Test ${{ matrix.display_os }}
     runs-on: ${{ matrix.os }}
     needs: [build]
-    timeout-minutes: 70
+    # Budget two 60-minute runs plus 10 minutes for setup and timeout reports.
+    timeout-minutes: 130
     strategy:
       fail-fast: false
       # Native runner entries cover all configurations. Container entries cover

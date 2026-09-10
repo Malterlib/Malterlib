@@ -50,5 +50,9 @@ if [[ "$TestsDirName" != "Tests" ]]; then
   mv "$TestsDirName" Tests
 fi
 cd Tests
-./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
-sudo -E ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
+
+# Test_macOS.yml must allow both runs to finish and report timeouts.
+TestTimeout="${TestTimeout:-3600}"
+
+./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout "$TestTimeout" -- --logs
+sudo -E ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout "$TestTimeout" --no-parallel -- --logs

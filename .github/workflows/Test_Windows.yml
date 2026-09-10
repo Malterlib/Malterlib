@@ -164,6 +164,7 @@ jobs:
     name: Test ${{ matrix.display_os }}
     runs-on: ${{ matrix.os }}
     needs: [build]
+    # Budget one 60-minute run plus 10 minutes for setup and timeout reports.
     timeout-minutes: 70
     strategy:
       fail-fast: false
