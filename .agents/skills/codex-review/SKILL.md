@@ -1,6 +1,6 @@
 ---
 name: codex-review
-description: Get a second-opinion code review via `codex --yolo review`, using Codex's configured default model unless the user requests another model. Use when the user asks for a code review, second opinion, or sanity check on uncommitted/branch/commit changes before shipping, especially when the nested reviewer may need to run project tools. Do not use when already running inside `codex review`; never recursively invoke another Codex review.
+description: Get a second-opinion code review from Codex via `codex --yolo review`. Trigger only when the user explicitly names Codex (e.g. "codex review", "run codex on this", "what does codex think") or explicitly asks to invoke the `codex` CLI. Do not use for generic "review my code" / "second opinion" / "different model" requests — those are ambiguous in multi-model harnesses. Do not use when already running inside `codex review`; never recursively invoke another Codex review.
 ---
 
 # Code Review with Codex
