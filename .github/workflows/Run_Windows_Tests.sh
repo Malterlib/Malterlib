@@ -48,4 +48,4 @@ if [[ ! -f "$BsdTar" ]]; then
 fi
 "$BsdTar" -xf ../Artifacts/Deploy.tar.zst
 cd Tests*
-./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
+./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs --log-concurrency-shutdown

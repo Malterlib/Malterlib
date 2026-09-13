@@ -42,8 +42,8 @@ ExtractAndRunTests() {
   fi
 
   cd Tests
-  "${UserRun[@]}" ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs
-  "${SuperUserRun[@]}" ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs
+  "${UserRun[@]}" ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs --log-concurrency-shutdown
+  "${SuperUserRun[@]}" ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs --log-concurrency-shutdown
 }
 
 if [[ "${1:-}" == "--inside-container" ]]; then
