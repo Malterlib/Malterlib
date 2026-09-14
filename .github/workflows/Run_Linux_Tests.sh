@@ -1,7 +1,7 @@
 # Copyright © Unbroken AB
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-set -e
+set -e -o pipefail
 
 # Shared between the native runner path and the container path
 
@@ -42,8 +42,10 @@ ExtractAndRunTests() {
   fi
 
   cd Tests
-  "${UserRun[@]}" ./RunAllTests --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs --log-concurrency-shutdown
-  "${SuperUserRun[@]}" ./RunAllTests -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs --log-concurrency-shutdown
+  # Apply the limit after user switching; the test processes inherit it for rings and pinned send buffers.
+  local TestRun=(prlimit --memlock=unlimited:unlimited -- ./RunAllTests)
+  "${UserRun[@]}" "${TestRun[@]}" --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs --log-concurrency-shutdown
+  "${SuperUserRun[@]}" "${TestRun[@]}" -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs --log-concurrency-shutdown
 }
 
 if [[ "${1:-}" == "--inside-container" ]]; then
@@ -98,6 +100,7 @@ if [[ -n "${Image:-}" ]]; then
   docker run --rm --init \
     --network malterlib-tests \
     --shm-size=1g \
+    --ulimit memlock=-1:-1 \
     --cap-add=SYS_PTRACE \
     --security-opt seccomp=unconfined \
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
@@ -118,6 +121,10 @@ if [[ -n "${Image:-}" ]]; then
 fi
 
 # Run the tests natively on the runner
+
+# Raise this shell's hard limit so ordinary test processes can retain it without running as root.
+sudo prlimit --pid "$BASHPID" --memlock=unlimited:unlimited
+prlimit --pid "$BASHPID" --memlock
 
 # To reproduce bug where getgrnam_r returns errors when user is not found
 sudo apt update
