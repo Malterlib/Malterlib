@@ -54,6 +54,10 @@ env:
   MalterlibLogCategoryWidth: "60"
   MalterlibEnableBreakpad: "true"
   MalterlibConcurrency_DebugSubscriptions: "true"
+  # Set the repository Actions variable MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS to true to enable these for all test builds.
+  MalterlibConcurrency_DebugBlockDestroy: ${{ vars.MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS == 'true' && 'true' || 'false' }}
+  MalterlibConcurrency_DebugFutures: ${{ vars.MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS == 'true' && 'true' || 'false' }}
+  Malterlib_RefCountDebugging_Enable: ${{ vars.MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS == 'true' && 'true' || 'false' }}
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
   MinimumBuildDiskSpaceGb: "60"

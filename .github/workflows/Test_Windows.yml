@@ -50,6 +50,10 @@ env:
   MalterlibTestsMem_EnablePerfTests: "false"
   MalterlibLogCategoryWidth: "60"
   MalterlibConcurrency_DebugSubscriptions: "true"
+  # Set the repository Actions variable MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS to true to enable these for all test builds.
+  MalterlibConcurrency_DebugBlockDestroy: ${{ vars.MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS == 'true' && 'true' || 'false' }}
+  MalterlibConcurrency_DebugFutures: ${{ vars.MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS == 'true' && 'true' || 'false' }}
+  Malterlib_RefCountDebugging_Enable: ${{ vars.MALTERLIB_ACTOR_SHUTDOWN_DIAGNOSTICS == 'true' && 'true' || 'false' }}
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
   ASAN_OPTIONS: "detect_leaks=0"
