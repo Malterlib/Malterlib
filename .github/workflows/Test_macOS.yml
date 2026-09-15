@@ -50,11 +50,10 @@ env:
   MalterlibLogCategoryWidth: "60"
   MalterlibEnableBreakpad: "true"
   MalterlibConcurrency_DebugSubscriptions: "true"
-  # Temporary for the Mac x64 TSan build until the Cloud/NetworkTunnel/General shutdown hang of run 34750379558 reproduces
-  # with these enabled. They synchronize actor and future bookkeeping, which changes timing, so they stay off elsewhere
-  MalterlibConcurrency_DebugBlockDestroy: ${{ inputs.architecture == 'x64' && inputs.sanitizer == 'Thread' && 'true' || 'false' }}
-  MalterlibConcurrency_DebugFutures: ${{ inputs.architecture == 'x64' && inputs.sanitizer == 'Thread' && 'true' || 'false' }}
-  Malterlib_RefCountDebugging_Enable: ${{ inputs.architecture == 'x64' && inputs.sanitizer == 'Thread' && 'true' || 'false' }}
+  # Temporary diagnostics for reproducing actor shutdown hangs.
+  MalterlibConcurrency_DebugBlockDestroy: "true"
+  MalterlibConcurrency_DebugFutures: "true"
+  Malterlib_RefCountDebugging_Enable: "true"
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
   ASAN_OPTIONS: "detect_leaks=0"

@@ -54,6 +54,10 @@ env:
   MalterlibLogCategoryWidth: "60"
   MalterlibEnableBreakpad: "true"
   MalterlibConcurrency_DebugSubscriptions: "true"
+  # Temporary diagnostics for reproducing actor shutdown hangs.
+  MalterlibConcurrency_DebugBlockDestroy: "true"
+  MalterlibConcurrency_DebugFutures: "true"
+  Malterlib_RefCountDebugging_Enable: "true"
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
   MinimumBuildDiskSpaceGb: "60"

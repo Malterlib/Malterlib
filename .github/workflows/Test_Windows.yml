@@ -50,6 +50,10 @@ env:
   MalterlibTestsMem_EnablePerfTests: "false"
   MalterlibLogCategoryWidth: "60"
   MalterlibConcurrency_DebugSubscriptions: "true"
+  # Temporary diagnostics for reproducing actor shutdown hangs.
+  MalterlibConcurrency_DebugBlockDestroy: "true"
+  MalterlibConcurrency_DebugFutures: "true"
+  Malterlib_RefCountDebugging_Enable: "true"
   MalterlibBuildShowProgress: "false"
   RunningCI: "true"
   ASAN_OPTIONS: "detect_leaks=0"
