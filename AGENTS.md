@@ -186,6 +186,9 @@ Always read `Malterlib/Test/CLAUDE.md` before writing or modifying tests in any 
 - After creating or rewriting commits in sub-repositories, run `./mib repo-commit` from the workspace root to update parent `.MRepo` references and generate or refresh the `Update repositories` commits. Use this command instead of manually editing or committing repository-reference files.
 - Switch branch: `./mib branch [BranchName]`
 - Push changes: `./mib push`
+- Format the sources of every repository that sets `Repository.Format`: `./mib format`, or `./mib format --check` to report only
+- Validate the tracked text files of those repositories: `./mib validate`, `./mib validate --staged`, or `./mib validate --base REF`
+- Run the clang-tidy checks the `.clang-tidy` files enable over every repository that sets `Repository.Tidy {Enabled: true}` (`IncludeFiles`/`ExcludeFiles` wildcards, relative to the repository, narrow its files): `./mib tidy`, or `./mib tidy --staged` / `--base REF` for changed files; generate the build system first
 - `mib` supports git worktrees, but avoid them for agent-driven workflows in this repository. Many changes land inside the `Malterlib/*` sub-repositories, and syncing those changes back from the top-level worktree does not behave correctly.
 - Keep the main repository on a named branch when bootstrapping or running `./mib update-repos`. Detached `HEAD` checkouts are intentionally unsupported because sub-repositories are synchronized against the main branch.
 - The system uses git LFS for binary dependencies - ensure it's installed
@@ -2060,10 +2063,10 @@ Provides convenient literal operators for JSON construction.
 **Operators**:
 - `"key"_j` - Creates a JSON key
 - `_j[]` - Creates an empty JSON array
-- `_j= {}` - Creates a JSON object
+- `_j={}` - Creates a JSON object
 - `"key"_` - Creates a EJSON key
 - `_[]` - Creates an empty EJSON array
-- `_= {}` - Creates a EJSON object
+- `_={}` - Creates a EJSON object
 
 **Usage Example**:
 ```cpp
@@ -2529,6 +2532,25 @@ Tests that deliberately use P-256 credentials set
 the compatible policy unless they opt into a minimum; see Network/CLAUDE.md for
 its algorithm checks and TLS protocol limits.
 
+### Exception stream versions
+
+Exceptions sent between actors stream with a version of their own: `mc_StreamVersion` on the exception's specific data,
+0 by default, read with `_Stream.f_GetVersion()` in its `f_Stream`. A newer version can add fields at the end, and readers
+skip what they don't know. Peers older than `EDistributedActorProtocolVersion_ExceptionStreamVersions` get version 0.
+Data that extends an inherited stream sets the version that data expects before calling it, as
+`CGitHostingProviderExceptionData` does.
+
+A plain `CExceptionPointer` can't be streamed: `_Stream << pException` fails to compile with a `static_assert`, since only
+the containing data knows whether its reader has exception stream versions. Instead:
+
+- Stream an `NException::CStreamableExceptionPointer`. By default it streams the exception with its stream version, which
+  needs every reader of the data to have exception stream versions.
+- When the reader can be older, give the containing data an `mc_StreamVersion` and pass `bVersioned` as
+  `_Stream.f_GetVersion() >= <version>`: to `CStreamableExceptionPointer(pException, bVersioned)`, or to
+  `NConcurrency::NPrivate::fg_FeedException(_Stream, pException, bVersioned)` and `fg_ConsumeException(_Stream, bVersioned)`
+  for a member that stays a `CExceptionPointer`, like `CExceptionWrappedData`. Both sides must pass the same `bVersioned`;
+  the stream itself doesn't say which format it holds.
+
 ### Distributed Actors
 
 ```cpp
@@ -2645,6 +2667,26 @@ TCFuture<void> f_ParallelWork()
 
 	co_return {};
 }
+```
+
+### Bounded Blocking Actors
+
+Every `fg_BlockingActor()` checkout that is not free is a thread, so code that queues
+many operations at once takes turns on a bounded set instead of checking one out per
+operation. `CRoundRobinBlockingActors` serves one actor or coroutine;
+`CSharedRoundRobinBlockingActors` serves callers on different threads.
+
+```cpp
+TCSharedPointer<CSharedRoundRobinBlockingActors> pBlockingActors = fg_Construct(umint(4));
+
+CStr Content = co_await
+	(
+		g_Dispatch(pBlockingActors->f_Next()) / [Path]() -> CStr
+		{
+			return CFile::fs_ReadStringFromFile(Path);
+		}
+	)
+;
 ```
 
 ### Actor Destruction
