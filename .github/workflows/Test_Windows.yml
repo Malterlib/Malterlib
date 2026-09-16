@@ -42,7 +42,6 @@ env:
   MalterlibEnableInternalTests: "true"
   MalterlibDebugSymbolsEnable: "false"
   MalterlibDeploySymbols: "false"
-  MalterlibSupportCrashDumps: "false"
   MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunch/*/*/KillSandbox;Malterlib/Time/Time/Time speed"
   MalterlibFlakyErrors: "Failed to replace local function with sanitizer version"
   MalterlibFileLineOnDebugBreak: "true"
@@ -236,6 +235,18 @@ jobs:
       shell: bash
       run: |
         df -h
+    - name: Configure crash dumps
+      shell: pwsh
+      run: |
+        $DumpFolder = Join-Path $env:GITHUB_WORKSPACE 'CrashDumps'
+        New-Item -ItemType Directory -Path $DumpFolder -Force | Out-Null
+        foreach ($SoftwareKey in @('HKLM:\SOFTWARE', 'HKLM:\SOFTWARE\WOW6432Node')) {
+          $DumpKey = "$SoftwareKey\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+          New-Item -Path $DumpKey -Force | Out-Null
+          New-ItemProperty -Path $DumpKey -Name DumpFolder -Value $DumpFolder -PropertyType ExpandString -Force | Out-Null
+          New-ItemProperty -Path $DumpKey -Name DumpType -Value 1 -PropertyType DWord -Force | Out-Null
+          New-ItemProperty -Path $DumpKey -Name DumpCount -Value 20 -PropertyType DWord -Force | Out-Null
+        }
     - name: Run tests
       shell: bash
       run: ./.github/workflows/Run_Windows_Tests.sh
@@ -243,9 +254,17 @@ jobs:
         MatrixOs: ${{ matrix.os }}
 
     - uses: actions/upload-artifact@v7
-      if: ((failure() || success()) && (env.MalterlibSupportCrashDumps == 'true'))
+      id: crash_dumps
+      if: always()
       with:
-        name: Crash Dumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
+        name: CrashDumps ${{ inputs.platform }} ${{ matrix.os }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}
         path: |
-          Deploy/CrashDumps/MiniDump_*
-          Deploy/CrashDumps/*.txt
+          CrashDumps
+          Deploy/CrashDumps
+        if-no-files-found: ignore
+    - name: Fail if crash dumps were produced
+      if: always() && steps.crash_dumps.outputs.artifact-id != ''
+      shell: bash
+      run: |
+        echo "::error::Crash dumps were produced. See the uploaded CrashDumps artifact."
+        exit 1

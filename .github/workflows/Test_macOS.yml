@@ -42,7 +42,6 @@ env:
   MalterlibEnableInternalTests: "true"
   MalterlibDebugSymbolsEnable: "false"
   MalterlibDeploySymbols: "false"
-  MalterlibSupportCrashDumps: "false"
   MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Process/ProcessLaunchFeatures/Run As;Malterlib/Time/Time/Time speed"
   MalterlibFlakyErrors: "Timed out waiting for user/group change to come into effect;notBefore date is after current time"
   MalterlibFileLineOnDebugBreak: "true"
@@ -163,6 +162,28 @@ jobs:
       run: |
         touch "$RUNNER_TEMP/tests-started"
         ./.github/workflows/Run_macOS_Tests.sh
+    - name: Make crash dumps readable by the runner
+      if: always()
+      shell: bash
+      run: |
+        set -e -o pipefail
+        if sudo test -d /opt/Deploy/CrashDumps; then
+          sudo chown -R "$(id -u):$(id -g)" /opt/Deploy/CrashDumps
+          sudo chmod -R u+rwX /opt/Deploy/CrashDumps
+        fi
+    - uses: actions/upload-artifact@v7
+      id: crash_dumps
+      if: always()
+      with:
+        name: CrashDumps ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }} ${{ matrix.display_os }}
+        path: /opt/Deploy/CrashDumps
+        if-no-files-found: ignore
+    - name: Fail if crash dumps were produced
+      if: always() && steps.crash_dumps.outputs.artifact-id != ''
+      shell: bash
+      run: |
+        echo "::error::Crash dumps were produced. See the uploaded CrashDumps artifact."
+        exit 1
     - name: Crash reports
       if: failure()
       shell: bash
@@ -173,9 +194,3 @@ jobs:
           echo "== $Report"
           cat "$Report"
         done
-    - uses: actions/upload-artifact@v7
-      if: failure()
-      with:
-        name: CrashDumps ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }} ${{ matrix.display_os }}
-        path: /opt/Deploy/CrashDumps
-        if-no-files-found: ignore

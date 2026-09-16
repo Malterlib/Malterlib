@@ -47,7 +47,6 @@ env:
   MalterlibEnableInternalTests: "true"
   MalterlibDebugSymbolsEnable: "false"
   MalterlibDeploySymbols: "false"
-  MalterlibSupportCrashDumps: "false"
   MalterlibFlakySuites: "Malterlib/File/File/Tests;Malterlib/Time/Time/Time speed"
   MalterlibFileLineOnDebugBreak: "true"
   MalterlibReproducibleBuild: "true"
@@ -398,3 +397,29 @@ jobs:
         Image: ${{ matrix.image }}
         ImagePlatform: ${{ matrix.platform }}
         Setarch: ${{ matrix.setarch }}
+    - name: Make crash dumps readable by the runner
+      if: always()
+      shell: bash
+      run: |
+        set -e -o pipefail
+        for DumpDirectory in "$GITHUB_WORKSPACE/CrashDumps" /Deploy/CrashDumps; do
+          if sudo test -d "$DumpDirectory"; then
+            sudo chown -R "$(id -u):$(id -g)" "$DumpDirectory"
+            sudo chmod -R u+rwX "$DumpDirectory"
+          fi
+        done
+    - uses: actions/upload-artifact@v7
+      id: crash_dumps
+      if: always()
+      with:
+        name: CrashDumps ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }} ${{ matrix.display_os }}
+        path: |
+          CrashDumps
+          /Deploy/CrashDumps
+        if-no-files-found: ignore
+    - name: Fail if crash dumps were produced
+      if: always() && steps.crash_dumps.outputs.artifact-id != ''
+      shell: bash
+      run: |
+        echo "::error::Crash dumps were produced. See the uploaded CrashDumps artifact."
+        exit 1

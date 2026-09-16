@@ -97,6 +97,7 @@ if [[ -n "${Image:-}" ]]; then
   if ! docker network inspect malterlib-tests >/dev/null 2>&1; then
     docker network create --ipv6 --subnet fd0c:a17e:51b5::/64 malterlib-tests
   fi
+  mkdir -p "$PWD/CrashDumps"
   docker run --rm --init \
     --network malterlib-tests \
     --shm-size=1g \
@@ -106,6 +107,7 @@ if [[ -n "${Image:-}" ]]; then
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
     "${DockerArgs[@]}" \
     -v "$PWD/Artifacts:/Artifacts:ro" \
+    -v "$PWD/CrashDumps:/Deploy/CrashDumps" \
     -v "$ScriptPath:/Run_Linux_Tests.sh:ro" \
     -e MalterlibFlakySuites \
     -e MalterlibTerminalWidth \
