@@ -689,6 +689,12 @@ void fg_UseFlags()
 }
 ```
 
+### Thread Priority
+
+`EExecutionPriority` is absolute, and on Linux a thread cannot raise itself above what it inherits
+from its creator. Read `Documentation/ThreadPriority.md` before changing thread priorities, thread
+creation or the priority of Linux daemons.
+
 ## Platform-Specific Implementation
 
 ### File Organization
@@ -3017,6 +3023,12 @@ Singletons are actors, one per actor type per manager. Users of a shared actor r
 their reference instead of destroying the actor. The wrapped result carries the error
 for a manager that is already destroying, so awaiting it forwards that error without a
 catch; outside a coroutine, unpacking the result throws it instead.
+
+### Thread Creation From Lowered Threads
+
+`fg_RunApp` serves Linux thread creation for lowered threads from its run loop through
+`CRunLoopThreadSpawnServer`. See `../Core/Documentation/ThreadPriority.md` before holding one on
+another run loop.
 
 ### Weak Actor References
 ```cpp
