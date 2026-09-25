@@ -54,13 +54,13 @@ if [[ "${1:-}" == "--inside-container" ]]; then
   if command -v apt-get >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install --yes --no-install-recommends ca-certificates git zstd postgresql nodejs npm util-linux passwd
+    apt-get install --yes --no-install-recommends ca-certificates git zstd postgresql nodejs npm util-linux passwd gdb
   elif command -v dnf >/dev/null 2>&1; then
-    dnf install --assumeyes ca-certificates git zstd tar postgresql-server nodejs npm util-linux shadow-utils
+    dnf install --assumeyes ca-certificates git zstd tar postgresql-server nodejs npm util-linux shadow-utils gdb
   elif command -v pacman >/dev/null 2>&1; then
-    pacman -Syu --noconfirm ca-certificates git zstd postgresql nodejs npm util-linux shadow
+    pacman -Syu --noconfirm ca-certificates git zstd postgresql nodejs npm util-linux shadow gdb
   elif command -v zypper >/dev/null 2>&1; then
-    zypper --non-interactive install ca-certificates git zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow
+    zypper --non-interactive install ca-certificates git zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow gdb
   else
     echo "No supported package manager found" >&2
     exit 1
@@ -131,6 +131,9 @@ prlimit --pid "$BASHPID" --memlock
 # To reproduce bug where getgrnam_r returns errors when user is not found
 sudo apt update
 sudo apt install sssd
+
+# RunAllTests attaches gdb to a suite that hangs to print its stacks
+sudo apt install --yes gdb
 
 if ! ConfigurePostgresPath; then
   sudo apt install --yes postgresql
