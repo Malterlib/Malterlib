@@ -2062,10 +2062,10 @@ Provides convenient literal operators for JSON construction.
 **Operators**:
 - `"key"_j` - Creates a JSON key
 - `_j[]` - Creates an empty JSON array
-- `_j= {}` - Creates a JSON object
+- `_j={}` - Creates a JSON object
 - `"key"_` - Creates a EJSON key
 - `_[]` - Creates an empty EJSON array
-- `_= {}` - Creates a EJSON object
+- `_={}` - Creates a EJSON object
 
 **Usage Example**:
 ```cpp
@@ -2530,6 +2530,25 @@ Tests that deliberately use P-256 credentials set
 `mc_EquivalentSymmetric128bit` explicitly. Ordinary `CSSLContext` users retain
 the compatible policy unless they opt into a minimum; see Network/CLAUDE.md for
 its algorithm checks and TLS protocol limits.
+
+### Exception stream versions
+
+Exceptions sent between actors stream with a version of their own: `mc_StreamVersion` on the exception's specific data,
+0 by default, read with `_Stream.f_GetVersion()` in its `f_Stream`. A newer version can add fields at the end, and readers
+skip what they don't know. Peers older than `EDistributedActorProtocolVersion_ExceptionStreamVersions` get version 0.
+Data that extends an inherited stream sets the version that data expects before calling it, as
+`CGitHostingProviderExceptionData` does.
+
+A plain `CExceptionPointer` can't be streamed: `_Stream << pException` fails to compile with a `static_assert`, since only
+the containing data knows whether its reader has exception stream versions. Instead:
+
+- Stream an `NException::CStreamableExceptionPointer`. By default it streams the exception with its stream version, which
+  needs every reader of the data to have exception stream versions.
+- When the reader can be older, give the containing data an `mc_StreamVersion` and pass `bVersioned` as
+  `_Stream.f_GetVersion() >= <version>`: to `CStreamableExceptionPointer(pException, bVersioned)`, or to
+  `NConcurrency::NPrivate::fg_FeedException(_Stream, pException, bVersioned)` and `fg_ConsumeException(_Stream, bVersioned)`
+  for a member that stays a `CExceptionPointer`, like `CExceptionWrappedData`. Both sides must pass the same `bVersioned`;
+  the stream itself doesn't say which format it holds.
 
 ### Distributed Actors
 
