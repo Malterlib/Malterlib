@@ -95,7 +95,10 @@ jobs:
       uses: actions/cache@v5
       with:
         path: Binaries/Malterlib/${{ inputs.platform }}/${{ inputs.architecture }}
-        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture)) }}
+        key: >-
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-${{
+          hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, inputs.architecture))
+          }}
         restore-keys: |
           malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ inputs.architecture }}-
     - name: Cache Linux SDK binary repository
@@ -104,7 +107,10 @@ jobs:
       uses: actions/cache@v5
       with:
         path: Binaries/MalterlibSDK/Linux/${{ inputs.architecture == 'x86' && 'Debian' || 'Ubuntu' }}/${{ inputs.architecture }}
-        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-{0}-{1}.MRepo', (inputs.architecture == 'x86' && 'Debian' || 'Ubuntu'), inputs.architecture)) }}
+        key: >-
+          malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{
+          hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-{0}-{1}.MRepo', (inputs.architecture == 'x86' && 'Debian' || 'Ubuntu'), inputs.architecture))
+          }}
         restore-keys: |
           malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-
     - name: Cache llvm-project

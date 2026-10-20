@@ -145,7 +145,14 @@ jobs:
         path: BuildState
     - uses: actions/download-artifact@v8
       id: download_prepopulated_stage_build_state
-      if: ${{ steps.checkout.outcome == 'success' && steps.download_current_stage_build_state.outcome != 'success' && inputs.prepopulate_run_id != '' && inputs.archive_build_state && steps.runner_disk.outputs.status == 'ok' }}
+      if: >-
+        ${{
+        steps.checkout.outcome == 'success'
+        && steps.download_current_stage_build_state.outcome != 'success'
+        && inputs.prepopulate_run_id != ''
+        && inputs.archive_build_state
+        && steps.runner_disk.outputs.status == 'ok'
+        }}
       continue-on-error: true
       with:
         name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.stage }}.tar.zst
@@ -163,7 +170,13 @@ jobs:
         run-id: ${{ inputs.prepopulate_run_id }}
     - name: Check prepopulated stage status
       id: check_prepopulated_stage_status
-      if: ${{ steps.checkout.outcome == 'success' && inputs.prepopulate_run_id != '' && (steps.download_prepopulated_stage_build_state.outcome == 'success' || steps.download_prepopulated_distribution.outcome == 'success') && steps.runner_disk.outputs.status == 'ok' }}
+      if: >-
+        ${{
+        steps.checkout.outcome == 'success'
+        && inputs.prepopulate_run_id != ''
+        && (steps.download_prepopulated_stage_build_state.outcome == 'success' || steps.download_prepopulated_distribution.outcome == 'success')
+        && steps.runner_disk.outputs.status == 'ok'
+        }}
       continue-on-error: true
       shell: bash
       env:
@@ -203,14 +216,34 @@ jobs:
         echo "Prepopulated source stage status for $StageDisplay from run $PREPOPULATE_RUN_ID: $Status"
     - uses: actions/download-artifact@v8
       id: download_build_state
-      if: ${{ steps.checkout.outcome == 'success' && steps.download_current_stage_build_state.outcome != 'success' && steps.check_prepopulated_stage_status.outputs.status != 'success' && (steps.download_prepopulated_stage_build_state.outcome != 'success' || inputs.stage == 'training') && inputs.restore_stage != '' && inputs.restore_stage != inputs.stage && steps.runner_disk.outputs.status == 'ok' }}
+      if: >-
+        ${{
+        steps.checkout.outcome == 'success'
+        && steps.download_current_stage_build_state.outcome != 'success'
+        && steps.check_prepopulated_stage_status.outputs.status != 'success'
+        && (steps.download_prepopulated_stage_build_state.outcome != 'success' || inputs.stage == 'training')
+        && inputs.restore_stage != ''
+        && inputs.restore_stage != inputs.stage
+        && steps.runner_disk.outputs.status == 'ok'
+        }}
       continue-on-error: true
       with:
         name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.restore_stage }}.tar.zst
         path: BuildState
     - uses: actions/download-artifact@v8
       id: download_prepopulated_build_state
-      if: ${{ steps.checkout.outcome == 'success' && steps.download_current_stage_build_state.outcome != 'success' && steps.check_prepopulated_stage_status.outputs.status != 'success' && (steps.download_prepopulated_stage_build_state.outcome != 'success' || inputs.stage == 'training') && steps.download_build_state.outcome != 'success' && inputs.prepopulate_run_id != '' && inputs.restore_stage != '' && inputs.restore_stage != inputs.stage && steps.runner_disk.outputs.status == 'ok' }}
+      if: >-
+        ${{
+        steps.checkout.outcome == 'success'
+        && steps.download_current_stage_build_state.outcome != 'success'
+        && steps.check_prepopulated_stage_status.outputs.status != 'success'
+        && (steps.download_prepopulated_stage_build_state.outcome != 'success' || inputs.stage == 'training')
+        && steps.download_build_state.outcome != 'success'
+        && inputs.prepopulate_run_id != ''
+        && inputs.restore_stage != ''
+        && inputs.restore_stage != inputs.stage
+        && steps.runner_disk.outputs.status == 'ok'
+        }}
       continue-on-error: true
       with:
         name: MalterlibLLVMBuild-${{ inputs.platform }}-${{ inputs.arch }}-${{ inputs.restore_stage }}.tar.zst
@@ -276,7 +309,13 @@ jobs:
         fi
     - name: Run LLVM stage
       id: run_stage
-      if: ${{ steps.checkout.outcome == 'success' && steps.restore_source.outputs.status != 'success' && steps.runner_disk.outputs.status == 'ok' && steps.restore_source.outcome == 'success' }}
+      if: >-
+        ${{
+        steps.checkout.outcome == 'success'
+        && steps.restore_source.outputs.status != 'success'
+        && steps.runner_disk.outputs.status == 'ok'
+        && steps.restore_source.outcome == 'success'
+        }}
       continue-on-error: ${{ inputs.fail_on_retry == false }}
       shell: bash -leo pipefail {0}
       env:
@@ -317,7 +356,20 @@ jobs:
         retention-days: 7
     - name: Set failed attempt retry status
       id: stage_failure
-      if: ${{ inputs.fail_on_retry == false && (steps.attempt_deadline.outcome == 'failure' || steps.setup_git.outcome == 'failure' || steps.checkout.outcome == 'failure' || steps.runner_disk.outcome == 'failure' || steps.restore_source.outcome == 'failure' || steps.run_stage.outcome == 'failure' || steps.upload_build_state.outcome == 'failure' || steps.upload_distribution.outcome == 'failure') }}
+      if: >-
+        ${{
+        inputs.fail_on_retry == false
+        && (
+        steps.attempt_deadline.outcome == 'failure'
+        || steps.setup_git.outcome == 'failure'
+        || steps.checkout.outcome == 'failure'
+        || steps.runner_disk.outcome == 'failure'
+        || steps.restore_source.outcome == 'failure'
+        || steps.run_stage.outcome == 'failure'
+        || steps.upload_build_state.outcome == 'failure'
+        || steps.upload_distribution.outcome == 'failure'
+        )
+        }}
       shell: bash
       run: |
         echo "::warning::${{ inputs.display }} failed; retrying in the next attempt."

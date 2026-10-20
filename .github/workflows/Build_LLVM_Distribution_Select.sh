@@ -24,7 +24,9 @@ for Row in "${Rows[@]}"; do
 	fi
 
 	Matrix+="$Separator"
-	Matrix+="{\"display\":\"$Display\",\"platform\":\"$Platform\",\"arch\":\"$Arch\",\"runner\":\"$Runner\",\"build_in_container\":$BuildInContainer,\"container_image\":\"$ContainerImage\",\"container_platform\":\"$ContainerPlatform\",\"stage_1\":\"$Stage1\",\"stage_2\":\"$Stage2\",\"stage_3\":\"$Stage3\",\"final_restore_stage\":\"$FinalRestoreStage\"}"
+	Matrix+="{\"display\":\"$Display\",\"platform\":\"$Platform\",\"arch\":\"$Arch\",\"runner\":\"$Runner\","
+	Matrix+="\"build_in_container\":$BuildInContainer,\"container_image\":\"$ContainerImage\",\"container_platform\":\"$ContainerPlatform\","
+	Matrix+="\"stage_1\":\"$Stage1\",\"stage_2\":\"$Stage2\",\"stage_3\":\"$Stage3\",\"final_restore_stage\":\"$FinalRestoreStage\"}"
 	Separator=","
 done
 

@@ -125,7 +125,13 @@ jobs:
   final:
     name: ${{ inputs.display }} final
     needs: [stage_1, stage_2, stage_3]
-    if: ${{ !cancelled() && needs.stage_1.outputs.status == 'success' && (inputs.stage_2 == '' || needs.stage_2.outputs.status == 'success') && (inputs.stage_3 == '' || needs.stage_3.outputs.status == 'success') }}
+    if: >-
+      ${{
+      !cancelled()
+      && needs.stage_1.outputs.status == 'success'
+      && (inputs.stage_2 == '' || needs.stage_2.outputs.status == 'success')
+      && (inputs.stage_3 == '' || needs.stage_3.outputs.status == 'success')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_With_Retry.yml
     with:
       display: ${{ inputs.display }} final

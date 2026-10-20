@@ -124,7 +124,10 @@ jobs:
       uses: actions/cache/restore@v5
       with:
         path: Binaries/Malterlib/${{ inputs.platform }}/${{ env.HostBinariesArchitecture }}
-        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, env.HostBinariesArchitecture)) }}
+        key: >-
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-${{
+          hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, env.HostBinariesArchitecture))
+          }}
         restore-keys: |
           malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-
     - name: Restore llvm-project

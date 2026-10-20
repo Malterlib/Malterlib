@@ -59,7 +59,10 @@ fg_EmitStageStatusFromFile()
 fg_FreeLinuxDiskSpace()
 {
 	df -h
-	sudo rm -rf /usr/local/lib/android /usr/share/swift /usr/local/share/powershell /usr/lib/jvm /opt/az /usr/lib/llvm-* /usr/share/miniconda /usr/local/julia* /opt/microsoft/msedge /usr/lib/dotnet /usr/share/az_* /usr/lib/firefox /opt/microsoft/powershell /usr/share/gradle-* /usr/share/kotlinc /opt/ghc /opt/hostedtoolcache/CodeQL || true
+	sudo rm -rf /usr/local/lib/android /usr/share/swift /usr/local/share/powershell /usr/lib/jvm /opt/az \
+		/usr/lib/llvm-* /usr/share/miniconda /usr/local/julia* /opt/microsoft/msedge /usr/lib/dotnet /usr/share/az_* \
+		/usr/lib/firefox /opt/microsoft/powershell /usr/share/gradle-* /usr/share/kotlinc /opt/ghc \
+		/opt/hostedtoolcache/CodeQL || true
 	sudo apt-get update
 	sudo apt-get install -y zstd
 	df -h
