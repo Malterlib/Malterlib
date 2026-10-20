@@ -61,7 +61,10 @@ env:
   RunningCI: "true"
   MinimumBuildDiskSpaceGb: "60"
   MinimumWorkspaceDiskSpaceGb: "20"
-  MaximizeDiskSpaceDirectories: "/usr/local/lib/android /usr/share/swift /usr/local/share/powershell /usr/lib/jvm /opt/az /usr/lib/llvm-* /usr/share/miniconda /usr/local/julia* /opt/microsoft/msedge /usr/lib/dotnet /usr/share/az_* /usr/lib/firefox /opt/microsoft/powershell /usr/share/gradle-* /usr/share/kotlinc /opt/ghc /opt/hostedtoolcache/CodeQL"
+  MaximizeDiskSpaceDirectories: >-
+    /usr/local/lib/android /usr/share/swift /usr/local/share/powershell /usr/lib/jvm /opt/az /usr/lib/llvm-*
+    /usr/share/miniconda /usr/local/julia* /opt/microsoft/msedge /usr/lib/dotnet /usr/share/az_* /usr/lib/firefox
+    /opt/microsoft/powershell /usr/share/gradle-* /usr/share/kotlinc /opt/ghc /opt/hostedtoolcache/CodeQL
   ASAN_OPTIONS: "detect_leaks=0"
   TSAN_OPTIONS: "second_deadlock_stack=1"
   UBSAN_OPTIONS: "halt_on_error=1,print_stacktrace=1"
@@ -188,7 +191,10 @@ jobs:
       uses: actions/cache/restore@v5
       with:
         path: Binaries/Malterlib/${{ inputs.platform }}/${{ env.HostBinariesArchitecture }}
-        key: malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, env.HostBinariesArchitecture)) }}
+        key: >-
+          malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-${{
+          hashFiles(format('.github/repository-cache/MalterlibBinaries-{0}-{1}.MRepo', inputs.platform, env.HostBinariesArchitecture))
+          }}
         restore-keys: |
           malterlib-binaries-v3-${{ runner.os }}-${{ inputs.platform }}-${{ env.HostBinariesArchitecture }}-
     - name: Maximize disk space
@@ -211,7 +217,10 @@ jobs:
       uses: actions/cache/restore@v5
       with:
         path: Binaries/MalterlibSDK/Linux/${{ inputs.architecture == 'x86' && 'Debian' || 'Ubuntu' }}/${{ inputs.architecture }}
-        key: malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{ hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-{0}-{1}.MRepo', (inputs.architecture == 'x86' && 'Debian' || 'Ubuntu'), inputs.architecture)) }}
+        key: >-
+          malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-${{
+          hashFiles(format('.github/repository-cache/MalterlibBinariesSDK-Linux-{0}-{1}.MRepo', (inputs.architecture == 'x86' && 'Debian' || 'Ubuntu'), inputs.architecture))
+          }}
         restore-keys: |
           malterlib-linux-sdk-v2-${{ runner.os }}-${{ inputs.architecture }}-
     - name: Restore llvm-project
