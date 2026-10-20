@@ -80,7 +80,11 @@ jobs:
   attempt_2:
     name: ${{ inputs.display }} attempt 2
     needs: attempt_1
-    if: ${{ !cancelled() && (needs.attempt_1.outputs.status == 'retry' || needs.attempt_1.outputs.status == 'running' || needs.attempt_1.result == 'failure' || needs.attempt_1.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_1.outputs.status == 'retry' || needs.attempt_1.outputs.status == 'running' || needs.attempt_1.result == 'failure' || needs.attempt_1.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 2
@@ -101,7 +105,11 @@ jobs:
   attempt_3:
     name: ${{ inputs.display }} attempt 3
     needs: attempt_2
-    if: ${{ !cancelled() && (needs.attempt_2.outputs.status == 'retry' || needs.attempt_2.outputs.status == 'running' || needs.attempt_2.result == 'failure' || needs.attempt_2.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_2.outputs.status == 'retry' || needs.attempt_2.outputs.status == 'running' || needs.attempt_2.result == 'failure' || needs.attempt_2.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 3
@@ -122,7 +130,11 @@ jobs:
   attempt_4:
     name: ${{ inputs.display }} attempt 4
     needs: attempt_3
-    if: ${{ !cancelled() && (needs.attempt_3.outputs.status == 'retry' || needs.attempt_3.outputs.status == 'running' || needs.attempt_3.result == 'failure' || needs.attempt_3.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_3.outputs.status == 'retry' || needs.attempt_3.outputs.status == 'running' || needs.attempt_3.result == 'failure' || needs.attempt_3.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 4
@@ -143,7 +155,11 @@ jobs:
   attempt_5:
     name: ${{ inputs.display }} attempt 5
     needs: attempt_4
-    if: ${{ !cancelled() && (needs.attempt_4.outputs.status == 'retry' || needs.attempt_4.outputs.status == 'running' || needs.attempt_4.result == 'failure' || needs.attempt_4.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_4.outputs.status == 'retry' || needs.attempt_4.outputs.status == 'running' || needs.attempt_4.result == 'failure' || needs.attempt_4.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 5
@@ -164,7 +180,11 @@ jobs:
   attempt_6:
     name: ${{ inputs.display }} attempt 6
     needs: attempt_5
-    if: ${{ !cancelled() && (needs.attempt_5.outputs.status == 'retry' || needs.attempt_5.outputs.status == 'running' || needs.attempt_5.result == 'failure' || needs.attempt_5.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_5.outputs.status == 'retry' || needs.attempt_5.outputs.status == 'running' || needs.attempt_5.result == 'failure' || needs.attempt_5.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 6
@@ -185,7 +205,11 @@ jobs:
   attempt_7:
     name: ${{ inputs.display }} attempt 7
     needs: attempt_6
-    if: ${{ !cancelled() && (needs.attempt_6.outputs.status == 'retry' || needs.attempt_6.outputs.status == 'running' || needs.attempt_6.result == 'failure' || needs.attempt_6.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_6.outputs.status == 'retry' || needs.attempt_6.outputs.status == 'running' || needs.attempt_6.result == 'failure' || needs.attempt_6.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 7
@@ -206,7 +230,11 @@ jobs:
   attempt_8:
     name: ${{ inputs.display }} attempt 8
     needs: attempt_7
-    if: ${{ !cancelled() && (needs.attempt_7.outputs.status == 'retry' || needs.attempt_7.outputs.status == 'running' || needs.attempt_7.result == 'failure' || needs.attempt_7.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_7.outputs.status == 'retry' || needs.attempt_7.outputs.status == 'running' || needs.attempt_7.result == 'failure' || needs.attempt_7.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 8
@@ -227,7 +255,11 @@ jobs:
   attempt_9:
     name: ${{ inputs.display }} attempt 9
     needs: attempt_8
-    if: ${{ !cancelled() && (needs.attempt_8.outputs.status == 'retry' || needs.attempt_8.outputs.status == 'running' || needs.attempt_8.result == 'failure' || needs.attempt_8.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_8.outputs.status == 'retry' || needs.attempt_8.outputs.status == 'running' || needs.attempt_8.result == 'failure' || needs.attempt_8.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 9
@@ -248,7 +280,11 @@ jobs:
   attempt_10:
     name: ${{ inputs.display }} attempt 10
     needs: attempt_9
-    if: ${{ !cancelled() && (needs.attempt_9.outputs.status == 'retry' || needs.attempt_9.outputs.status == 'running' || needs.attempt_9.result == 'failure' || needs.attempt_9.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_9.outputs.status == 'retry' || needs.attempt_9.outputs.status == 'running' || needs.attempt_9.result == 'failure' || needs.attempt_9.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 10
@@ -269,7 +305,11 @@ jobs:
   attempt_11:
     name: ${{ inputs.display }} attempt 11
     needs: attempt_10
-    if: ${{ !cancelled() && (needs.attempt_10.outputs.status == 'retry' || needs.attempt_10.outputs.status == 'running' || needs.attempt_10.result == 'failure' || needs.attempt_10.result == 'cancelled') }}
+    if: >-
+      ${{
+      !cancelled()
+      && (needs.attempt_10.outputs.status == 'retry' || needs.attempt_10.outputs.status == 'running' || needs.attempt_10.result == 'failure' || needs.attempt_10.result == 'cancelled')
+      }}
     uses: ./.github/workflows/Build_LLVM_Distribution_Stage_Attempt.yml
     with:
       display: ${{ inputs.display }} attempt 11
