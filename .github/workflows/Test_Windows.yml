@@ -134,6 +134,12 @@ jobs:
         key: malterlib-llvm-project-windows-v2-${{ hashFiles('.github/repository-cache/External-llvm-project.MRepo') }}
         restore-keys: |
           malterlib-llvm-project-windows-v2-
+    # Go builds Pebble, the ACME server the Web tests run against
+    - name: Setup Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: stable
+        cache: false
     - name: Build
       shell: bash -leo pipefail {0}
       run: |
