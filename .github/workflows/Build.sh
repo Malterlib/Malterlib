@@ -82,8 +82,15 @@ if [[ ! -f "$BsdTar" ]]; then
 	exit 1
 fi
 
-echo "$BsdTar" -caf "$Artifacts/Deploy.tar.zst" "$DeployDirectory"
-"$BsdTar" -caf "$Artifacts/Deploy.tar.zst" "$DeployDirectory"
+DeployEntries=("$DeployDirectory")
+if [[ "$BuildPlatform" == "Linux" ]]; then
+	# The test jobs have no LLVM checkout, and RunAllTests prints the stacks of hung suites with our LLDB
+	"$RootDir/.github/workflows/Stage_Linux_Debugger.sh" "$RootDir/Binaries/MalterlibLLVM/Linux/$BuildArchitecture" LLDB
+	DeployEntries+=(LLDB)
+fi
+
+echo "$BsdTar" -caf "$Artifacts/Deploy.tar.zst" "${DeployEntries[@]}"
+"$BsdTar" -caf "$Artifacts/Deploy.tar.zst" "${DeployEntries[@]}"
 
 if [[ "$BuildPlatform" == "Windows" ]]; then
 	cp "$BsdTar" "$Artifacts/bsdtar.exe"

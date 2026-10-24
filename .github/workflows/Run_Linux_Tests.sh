@@ -37,6 +37,9 @@ ExtractAndRunTests() {
   if [[ "$TestsDirName" != "Tests" ]]; then
     mv "$TestsDirName" Tests
   fi
+  # The deploy artifact carries LLDB from our LLVM build, see Build.sh
+  export MalterlibStackLLDB=/Deploy/LLDB/bin/lldb
+  "$MalterlibStackLLDB" --version
   if [[ -n "${TestsOwner:-}" ]]; then
     chown -R "$TestsOwner" /Deploy
   fi
@@ -132,7 +135,7 @@ prlimit --pid "$BASHPID" --memlock
 sudo apt update
 sudo apt install sssd
 
-# RunAllTests attaches gdb to a suite that hangs to print its stacks
+# RunAllTests falls back to gdb when LLDB cannot print the stacks of a suite that hangs
 sudo apt install --yes gdb
 
 if ! ConfigurePostgresPath; then
