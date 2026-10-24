@@ -20,6 +20,28 @@ ConfigurePostgresPath() {
   return 1
 }
 
+# Prints the load of the machine every 5 minutes, so a slow run shows whether the runner was starved
+StartLoadMonitor() {
+  (
+    read -r _ User Nice System Idle IOWait IRQ SoftIRQ Steal _ < /proc/stat
+    while sleep 300; do
+      read -r _ NewUser NewNice NewSystem NewIdle NewIOWait NewIRQ NewSoftIRQ NewSteal _ < /proc/stat
+      local Total=$(( (NewUser + NewNice + NewSystem + NewIdle + NewIOWait + NewIRQ + NewSoftIRQ + NewSteal) - (User + Nice + System + Idle + IOWait + IRQ + SoftIRQ + Steal) ))
+      if (( Total > 0 )); then
+        local Busy=$(( 100 * ((NewUser + NewNice + NewSystem + NewIRQ + NewSoftIRQ) - (User + Nice + System + IRQ + SoftIRQ)) / Total ))
+        local IOWaitPercent=$(( 100 * (NewIOWait - IOWait) / Total ))
+        local StealPercent=$(( 100 * (NewSteal - Steal) / Total ))
+        local Memory
+        Memory="$(awk '/^(MemAvailable|SwapTotal|SwapFree):/ { printf " %s %d MiB", $1, $2 / 1024 }' /proc/meminfo)"
+        echo "Load $(date -u +%H:%M:%S): average $(cut -d ' ' -f 1-3 /proc/loadavg), busy ${Busy}%, iowait ${IOWaitPercent}%, steal ${StealPercent}%,${Memory}"
+      fi
+      User=$NewUser Nice=$NewNice System=$NewSystem Idle=$NewIdle IOWait=$NewIOWait IRQ=$NewIRQ SoftIRQ=$NewSoftIRQ Steal=$NewSteal
+    done
+  ) &
+  LoadMonitorPID=$!
+  trap 'kill "$LoadMonitorPID" 2>/dev/null || true' EXIT
+}
+
 # Uses ArtifactsPath, TestsOwner, UserRun and SuperUserRun set up by the caller
 ExtractAndRunTests() {
   if ! ConfigurePostgresPath; then
@@ -45,6 +67,7 @@ ExtractAndRunTests() {
   fi
 
   cd Tests
+  StartLoadMonitor
   # Apply the limit after user switching; the test processes inherit it for rings and pinned send buffers.
   local TestRun=(prlimit --memlock=unlimited:unlimited -- ./RunAllTests)
   "${UserRun[@]}" "${TestRun[@]}" --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs --log-concurrency-shutdown
@@ -74,6 +97,15 @@ if [[ "${1:-}" == "--inside-container" ]]; then
   fi
 
   useradd -m tester
+
+  # RunAllTests keeps the suite runtimes it orders suites by in the home directory, and the workflow caches them between runs
+  chown -R tester /TestRuntimes
+  for MalterlibHome in /home/tester/.Malterlib /root/.Malterlib; do
+    mkdir -p "$MalterlibHome"
+    ln -sfn /TestRuntimes "$MalterlibHome/TestRuntimes"
+  done
+  chown -h tester /home/tester/.Malterlib /home/tester/.Malterlib/TestRuntimes
+
   export XDG_RUNTIME_DIR=/run/user/$(id -u tester)
   mkdir -p "$XDG_RUNTIME_DIR"
   chown tester "$XDG_RUNTIME_DIR"
@@ -101,6 +133,7 @@ if [[ -n "${Image:-}" ]]; then
     docker network create --ipv6 --subnet fd0c:a17e:51b5::/64 malterlib-tests
   fi
   mkdir -p "$PWD/CrashDumps"
+  mkdir -p "$HOME/.Malterlib/TestRuntimes"
   docker run --rm --init \
     --network malterlib-tests \
     --shm-size=1g \
@@ -111,6 +144,7 @@ if [[ -n "${Image:-}" ]]; then
     "${DockerArgs[@]}" \
     -v "$PWD/Artifacts:/Artifacts:ro" \
     -v "$PWD/CrashDumps:/Deploy/CrashDumps" \
+    -v "$HOME/.Malterlib/TestRuntimes:/TestRuntimes" \
     -v "$ScriptPath:/Run_Linux_Tests.sh:ro" \
     -e MalterlibFlakySuites \
     -e MalterlibTerminalWidth \

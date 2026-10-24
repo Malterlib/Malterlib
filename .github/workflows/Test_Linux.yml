@@ -390,6 +390,14 @@ jobs:
         echo "TSAN_OPTIONS=$TSAN_OPTIONS,external_symbolizer_path=$Symbolizer" >> "$GITHUB_ENV"
         echo "UBSAN_OPTIONS=$UBSAN_OPTIONS,external_symbolizer_path=$Symbolizer" >> "$GITHUB_ENV"
 
+    # Without the runtimes of an earlier run RunAllTests cannot start the slowest suites first
+    - name: Restore test runtimes
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.Malterlib/TestRuntimes
+        key: malterlib-test-runtimes-v1-${{ inputs.display_name }} ${{ matrix.display_os }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: |
+          malterlib-test-runtimes-v1-${{ inputs.display_name }} ${{ matrix.display_os }}-
     - name: Run tests
       shell: bash
       run: ./.github/workflows/Run_Linux_Tests.sh
@@ -397,6 +405,12 @@ jobs:
         Image: ${{ matrix.image }}
         ImagePlatform: ${{ matrix.platform }}
         Setarch: ${{ matrix.setarch }}
+    - name: Save test runtimes
+      if: always()
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.Malterlib/TestRuntimes
+        key: malterlib-test-runtimes-v1-${{ inputs.display_name }} ${{ matrix.display_os }}-${{ github.run_id }}-${{ github.run_attempt }}
     - name: Make crash dumps readable by the runner
       if: always()
       shell: bash
