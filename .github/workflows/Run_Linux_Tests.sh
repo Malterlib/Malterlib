@@ -83,8 +83,9 @@ ExtractAndRunTests() {
   StartLoadMonitor
   # Apply the limit after user switching; the test processes inherit it for rings and pinned send buffers.
   local TestRun=(prlimit --memlock=unlimited:unlimited -- ./RunAllTests)
-  "${UserRun[@]}" "${TestRun[@]}" --quiet --launch-per-suite --suite-order slow_first --timeout 3600 -- --logs --log-concurrency-shutdown
-  "${SuperUserRun[@]}" "${TestRun[@]}" -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 3600 --no-parallel -- --logs --log-concurrency-shutdown
+  # Test_Linux.yml must allow both runs to finish and report timeouts.
+  "${UserRun[@]}" "${TestRun[@]}" --quiet --launch-per-suite --suite-order slow_first --timeout 5400 -- --logs --log-concurrency-shutdown
+  "${SuperUserRun[@]}" "${TestRun[@]}" -g SuperUser --quiet --launch-per-suite --suite-order slow_first --timeout 1800 --no-parallel -- --logs --log-concurrency-shutdown
 }
 
 if [[ "${1:-}" == "--inside-container" ]]; then

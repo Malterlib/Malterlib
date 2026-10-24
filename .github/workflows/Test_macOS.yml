@@ -124,8 +124,8 @@ jobs:
     name: Test ${{ matrix.display_os }}
     runs-on: ${{ matrix.os }}
     needs: [build]
-    # Budget both TestTimeout runs plus 10 minutes for setup and timeout reports.
-    timeout-minutes: ${{ inputs.architecture == 'arm64' && 130 || 190 }}
+    # Budget the TestTimeout and SuperUserTestTimeout runs plus 10 minutes for setup and timeout reports.
+    timeout-minutes: 130
     strategy:
       fail-fast: false
       matrix:
@@ -156,8 +156,8 @@ jobs:
     - name: Run tests
       shell: bash
       env:
-        # x64 runners need more time for the same suites.
-        TestTimeout: ${{ inputs.architecture == 'arm64' && '3600' || '5400' }}
+        TestTimeout: '5400'
+        SuperUserTestTimeout: '1800'
       run: |
         touch "$RUNNER_TEMP/tests-started"
         ./.github/workflows/Run_macOS_Tests.sh
