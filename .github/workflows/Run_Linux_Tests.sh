@@ -42,6 +42,15 @@ StartLoadMonitor() {
   trap 'kill "$LoadMonitorPID" 2>/dev/null || true' EXIT
 }
 
+# Our LLDB fails to start without a shared Python runtime, and only looks for it under the names of a fixed set of versions
+ConfigureLLDBPython() {
+  local Library
+  Library="$(ls /usr/lib/libpython3.*.so.1.0 /usr/lib64/libpython3.*.so.1.0 /usr/lib/*-linux-gnu/libpython3.*.so.1.0 2>/dev/null | sort -V | tail -n 1 || true)"
+  if [[ -n "$Library" ]]; then
+    export LLDB_PYTHON_LIBRARY="$Library"
+  fi
+}
+
 # Uses ArtifactsPath, TestsOwner, UserRun and SuperUserRun set up by the caller
 ExtractAndRunTests() {
   if ! ConfigurePostgresPath; then
@@ -60,8 +69,12 @@ ExtractAndRunTests() {
     mv "$TestsDirName" Tests
   fi
   # The deploy artifact carries LLDB from our LLVM build, see Build.sh
+  ConfigureLLDBPython
   export MalterlibStackLLDB=/Deploy/LLDB/bin/lldb
-  "$MalterlibStackLLDB" --version
+  if ! "$MalterlibStackLLDB" --version; then
+    echo "::warning::LLDB cannot run on $(. /etc/os-release && echo "$PRETTY_NAME"), so RunAllTests prints the stacks of hung suites with gdb"
+    unset MalterlibStackLLDB
+  fi
   if [[ -n "${TestsOwner:-}" ]]; then
     chown -R "$TestsOwner" /Deploy
   fi
@@ -80,13 +93,13 @@ if [[ "${1:-}" == "--inside-container" ]]; then
   if command -v apt-get >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install --yes --no-install-recommends ca-certificates git zstd postgresql nodejs npm util-linux passwd gdb
+    apt-get install --yes --no-install-recommends ca-certificates git zstd postgresql nodejs npm util-linux passwd gdb libpython3-dev
   elif command -v dnf >/dev/null 2>&1; then
-    dnf install --assumeyes ca-certificates git zstd tar postgresql-server nodejs npm util-linux shadow-utils gdb
+    dnf install --assumeyes ca-certificates git zstd tar postgresql-server nodejs npm util-linux shadow-utils gdb python3-libs
   elif command -v pacman >/dev/null 2>&1; then
-    pacman -Syu --noconfirm ca-certificates git zstd postgresql nodejs npm util-linux shadow gdb
+    pacman -Syu --noconfirm ca-certificates git zstd postgresql nodejs npm util-linux shadow gdb python
   elif command -v zypper >/dev/null 2>&1; then
-    zypper --non-interactive install ca-certificates git zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow gdb
+    zypper --non-interactive install ca-certificates git zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow gdb python3
   else
     echo "No supported package manager found" >&2
     exit 1
@@ -169,8 +182,8 @@ prlimit --pid "$BASHPID" --memlock
 sudo apt update
 sudo apt install sssd
 
-# RunAllTests falls back to gdb when LLDB cannot print the stacks of a suite that hangs
-sudo apt install --yes gdb
+# RunAllTests falls back to gdb when LLDB cannot print the stacks of a suite that hangs. LLDB needs a shared Python runtime
+sudo apt install --yes gdb libpython3-dev
 
 if ! ConfigurePostgresPath; then
   sudo apt install --yes postgresql
