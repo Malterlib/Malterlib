@@ -132,7 +132,6 @@ jobs:
         include: |-
           ${{ fromJSON(
             inputs.architecture == 'arm64' && '[
-              {"os":"macos-14","display_os":"14"},
               {"os":"macos-15","display_os":"15"},
               {"os":"macos-26","display_os":"26"}
             ]' || '[
