@@ -133,7 +133,8 @@ jobs:
           ${{ fromJSON(
             inputs.architecture == 'arm64' && '[
               {"os":"macos-15","display_os":"15"},
-              {"os":"macos-26","display_os":"26"}
+              {"os":"macos-26","display_os":"26"},
+              {"os":"xcode-27","display_os":"27"}
             ]' || '[
               {"os":"macos-15-intel","display_os":"15"},
               {"os":"macos-26-intel","display_os":"26"}
