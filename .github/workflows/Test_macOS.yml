@@ -98,6 +98,12 @@ jobs:
         restore-keys: |
           malterlib-llvm-project-v2-
         enableCrossOsArchive: true
+    # Go builds Pebble, the ACME server the Web tests run against
+    - name: Setup Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: stable
+        cache: false
     - name: Build
       shell: bash
       run: |
