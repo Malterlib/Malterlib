@@ -2529,6 +2529,25 @@ Tests that deliberately use P-256 credentials set
 the compatible policy unless they opt into a minimum; see Network/CLAUDE.md for
 its algorithm checks and TLS protocol limits.
 
+### Exception stream versions
+
+Exceptions sent between actors stream with a version of their own: `mc_StreamVersion` on the exception's specific data,
+0 by default, read with `_Stream.f_GetVersion()` in its `f_Stream`. A newer version can add fields at the end, and readers
+skip what they don't know. Peers older than `EDistributedActorProtocolVersion_ExceptionStreamVersions` get version 0.
+Data that extends an inherited stream sets the version that data expects before calling it, as
+`CGitHostingProviderExceptionData` does.
+
+A plain `CExceptionPointer` can't be streamed: `_Stream << pException` fails to compile with a `static_assert`, since only
+the containing data knows whether its reader has exception stream versions. Instead:
+
+- Stream an `NException::CStreamableExceptionPointer`. By default it streams the exception with its stream version, which
+  needs every reader of the data to have exception stream versions.
+- When the reader can be older, give the containing data an `mc_StreamVersion` and pass `bVersioned` as
+  `_Stream.f_GetVersion() >= <version>`: to `CStreamableExceptionPointer(pException, bVersioned)`, or to
+  `NConcurrency::NPrivate::fg_FeedException(_Stream, pException, bVersioned)` and `fg_ConsumeException(_Stream, bVersioned)`
+  for a member that stays a `CExceptionPointer`, like `CExceptionWrappedData`. Both sides must pass the same `bVersioned`;
+  the stream itself doesn't say which format it holds.
+
 ### Distributed Actors
 
 ```cpp
@@ -2777,14 +2796,15 @@ auto Functor = g_ActorFunctor
 ```cpp
 // Ensure an actor is destroyed even if the coroutine exits early
 TCActor<CFileTransferSend> Upload = fg_ConstructActor<CFileTransferSend>(_Path);
-co_await fg_AsyncDestroy(Upload); // Schedule destruction when co-routine goes out of scope
+auto DestroyUpload = co_await fg_AsyncDestroy(Upload); // Destroys Upload when DestroyUpload goes out of scope
 
-// Destroy by value (functor/lambda) after use
-co_await fg_AsyncDestroy
+// Destroy with a cleanup function
+auto DestroyResult = co_await fg_AsyncDestroy
 	(
-		[&AsyncResult]() -> TCFuture<void>
+		[&]() -> TCFuture<void>
 		{
-			co_await fg_Move(AsyncResult).f_Destroy();
+			auto ToDestroy = fg_Move(AsyncResult); // Copy or move out before the first suspension
+			co_await fg_Move(ToDestroy).f_Destroy();
 			co_return {};
 		}
 	)
@@ -2814,7 +2834,8 @@ TCFuture<void> f_Process(CStr _Key)
 ```
 
 - Use the `fg_AsyncDestroy` helper instead of manual `g_OnScopeExit` plumbing when an actor/functor needs structured teardown.
-- Schedule the helper before the first suspension and capture by reference only while the cleanup body stays before its first real suspension. `co_await ECoroutineFlag_CaptureExceptions` does not suspend, so captured references are still safe across that await. After the first actual suspension point of the cleanup function the references WILL be invalid, so copy or move anything needed into locals before that point.
+- `co_await` the helper and keep its result in a named variable: the cleanup runs when that variable goes out of scope. Do not move the result to a longer-lived place, since the cleanup would then run after the locals it refers to are gone.
+- The cleanup function may capture by reference, but may use those references only before its own first real suspension. `co_await ECoroutineFlag_CaptureExceptions` does not suspend, so captured references are still safe across that await. After the first actual suspension point of the cleanup function the references WILL be invalid, so copy or move anything needed into locals before that point.
 - These helpers schedule destruction on the owning actor.
 - Pair `fg_OnResume` with any pointer captures when the coroutine is going to suspend before dereferencing actor-owned data. While the coroutine is cancelled if the actor dies, other actor calls can mutate or erase those structures during the suspension, so re-validation on resume avoids stale references.
 
