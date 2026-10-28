@@ -222,6 +222,23 @@ pre-commit hook, which refuses a commit whose added or changed lines are not for
 
 Fix what the hook reports instead of committing with `--no-verify`.
 
+#### Responding to the Malterlib checks
+Read the documentation of a check before changing code for it. For `malterlib-<name>`,
+`External/llvm-project/clang-tools-extra/docs/clang-tidy/checks/malterlib/<name>.rst` tells what the check can and can't see,
+and how to describe code it can't see. `External/llvm-project/clang-tools-extra/docs/clang-tidy/MalterlibOptionsFile.rst`
+describes the options that several checks share.
+
+- Fix the code when the check found a real problem.
+- When the code is correct, don't restructure it, copy data or make it slower only so the check stops reporting it, and
+  don't switch to `TCUnsafeFuture` to avoid one. Describe the code to the check instead: with the annotations in
+  `Mib/Core/TidyAnnotations`, such as `DMibActorEntries` or `DMibKeepsArgument`, or with the lists in
+  `Malterlib/Core/ClangTidyOptions.yaml`, such as `SafeCallees`, which lists functions that keep a closure alive while
+  they run it. An entry of a list matches by unqualified name, so it covers every function with that name. Use an
+  annotation or an entry only where what it states is true of all the code it covers.
+- When nothing fits, suppress the report with `// NOLINTNEXTLINE(malterlib-<name>): <why the code is correct>`, and
+  report the false positive or the limitation in Favro, in the Malterlib organization: the check, a minimal example of
+  the code and why it is correct.
+
 ### Sub-Repositories
 A checkout is a tree of Git repositories that `mib` manages: the root, which is Malterlib itself or a product built on it,
 and the sub-repositories in `Malterlib/*`, `External/*` and `Binaries/*`, plus whatever a product adds. Run Git in the
@@ -551,6 +568,10 @@ A useful comment records something a maintainer needs for correctness but cannot
 State the constraint directly and as briefly as possible. Prefer present-tense explanations of why
 the code must have its current shape. Use `// ` for ordinary Malterlib comments, aligned with the code,
 and continue multiline explanations with `//`.
+
+Write comments as plain, complete sentences that a maintainer who doesn't know the change can follow
+from the comment and the code beside it: no shorthand nouns, and no pronouns without a clear referent.
+Short is good only while it stays that clear.
 
 For example, this excerpt from
 `Malterlib/Concurrency/Source/Actor/Malterlib_Concurrency_AsyncGeneratorPrivate.hpp` explains how
@@ -3007,14 +3028,15 @@ auto Functor = g_ActorFunctor
 ```cpp
 // Ensure an actor is destroyed even if the coroutine exits early
 TCActor<CFileTransferSend> Upload = fg_ConstructActor<CFileTransferSend>(_Path);
-co_await fg_AsyncDestroy(Upload); // Schedule destruction when co-routine goes out of scope
+auto DestroyUpload = co_await fg_AsyncDestroy(Upload);
 
-// Destroy by value (functor/lambda) after use
-co_await fg_AsyncDestroy
+// Destroy with a cleanup function. It moves AsyncResult into its own local before it first suspends, since the captured reference can dangle after that
+auto DestroyResult = co_await fg_AsyncDestroy
 	(
-		[&AsyncResult]() -> TCFuture<void>
+		[&]() -> TCFuture<void>
 		{
-			co_await fg_Move(AsyncResult).f_Destroy();
+			auto ToDestroy = fg_Move(AsyncResult);
+			co_await fg_Move(ToDestroy).f_Destroy();
 			co_return {};
 		}
 	)
@@ -3025,7 +3047,7 @@ TCFuture<void> f_Process(CStr _Key)
 {
 	CValue *pValue = nullptr;
 
-	co_await fg_OnResume
+	auto OnResume = co_await fg_OnResume
 		(
 			[&]() -> CExceptionPointer
 			{
@@ -3044,11 +3066,26 @@ TCFuture<void> f_Process(CStr _Key)
 ```
 
 - Use the `fg_AsyncDestroy` helper instead of manual `g_OnScopeExit` plumbing when an actor/functor needs structured teardown.
-- Schedule the helper before the first suspension and capture by reference only while the cleanup body stays before its first real suspension. `co_await ECoroutineFlag_CaptureExceptions` does not suspend, so captured references are still safe across that await. After the first actual suspension point of the cleanup function the references WILL be invalid, so copy or move anything needed into locals before that point.
+- `co_await` the helper and keep its result in a named variable: the cleanup starts when that variable goes out of scope. Do not move the result to a longer-lived place: the cleanup can then run after the locals it refers to are gone, and the result must not outlive the coroutine that awaited the helper, since its destructor registers the cleanup with that coroutine.
+- The cleanup function may capture by reference, but after its first real suspension the locals it refers to can be gone, so it copies or moves what it needs from them into its own locals before that. `co_await ECoroutineFlag_CaptureExceptions` does not suspend.
 - These helpers schedule destruction on the owning actor.
-- Pair `fg_OnResume` with any pointer captures when the coroutine is going to suspend before dereferencing actor-owned data. While the coroutine is cancelled if the actor dies, other actor calls can mutate or erase those structures during the suspension, so re-validation on resume avoids stale references.
+- `co_await fg_OnResume(...)` runs the callable at once, ending the coroutine with its error if it returns one, and then again every time the coroutine resumes while the returned scope lives. Keep the scope in a named variable for the stretch of code the condition guards; the check stops when it goes out of scope.
+- Use it instead of repeating a check after each `co_await`: to check at every resume that a condition still holds, like an entry that must not be deleted, an operation that must not be stopping or aborted, or a generation that must not change, and to find pointers into actor state again, since other actor calls can change or erase that state while the coroutine is suspended.
+- A failed check ends the coroutine without the result of the `co_await` it resumes from, and no code after that `co_await` runs, also not the code after the scope. Code that must run even when the condition no longer holds, like a stop after a failed launch or handling a result that must be kept, must not be guarded: put the scope in a block that ends before that code. Cleanup that must run when a check fails, like an `fg_AsyncDestroy` result, must be registered before that check, so before the scope when it must also cover the first check.
+- The callable must not throw, since on resume it runs in a `noexcept` function. It is not a coroutine, so it can't suspend. It can return a `TCAsyncResult<T>` instead, with the return type of the coroutine as `T`, which ends the coroutine with its value or error when it is set.
 
 ## Local Command Sessions
+
+`MalterlibDistributedAppLocalSocketPrefix` moves the command-line sockets of a distributed app from
+its root directory to a directory under the prefix derived from the root directory, for a root
+on a filesystem that cannot host unix domain sockets, such as a virtiofs share in a container.
+Socket paths too long for that directory fall back to a directory under `/tmp`. Untrusted
+users must not be able to replace the prefix or any of its ancestors. On POSIX the prefix must
+be owned by a trusted user and be sticky or writable only by trusted users. The app checks the
+owner of the socket directory and of the directories it creates and sets their mode, but it
+doesn't check ACLs, so the prefix must not pass on ACL entries that let other users write.
+Windows doesn't check the owner or permissions of the socket directory, so only trusted users
+may write to the prefix and to the socket directory, also when it falls back under `/tmp`.
 
 For local command-line control, register for standard input before calling
 `f_RegisterForScreenChange`. Keep a stdin subscription alive while resize notifications
@@ -3126,7 +3163,24 @@ m_Value = Result;
 
 ### Error Handling with Coroutines
 
+A `TCFuture` coroutine must not throw. Return errors with `co_return DMibErrorInstance(...)` or let a failed `co_await`
+resolve the coroutine with its error. Code that can throw, such as parsing or `f_ToString` on a value that may be empty,
+goes inside a capture scope, `auto CaptureScope = co_await (g_CaptureExceptions % "Context");`, or the whole coroutine
+opts in with `co_await ECoroutineFlag_CaptureExceptions;` (or `ECoroutineFlag_CaptureMalterlibExceptions` for Malterlib
+exceptions only). Both turn the exception into the coroutine's error result. An exception that escapes the coroutine
+outside them crashes the process on purpose.
+
 ```cpp
+// INCORRECT: throws outside a capture scope, which crashes the process
+CStr ExtraInfo = Version.m_ExtraInfo.f_ToString(nullptr);
+
+// CORRECT: the exception becomes the error result of the coroutine
+CStr ExtraInfo;
+{
+	auto CaptureScope = co_await (g_CaptureExceptions % "Error encoding extra info");
+	ExtraInfo = Version.m_ExtraInfo.f_ToString(nullptr);
+}
+
 // INCORRECT: co_await in catch block (compilation error)
 try
 {
@@ -3219,6 +3273,7 @@ MalterlibConcurrency_DebugSubscriptions true    // Subscription logging
 9. **Deadlocks**: Avoid circular actor dependencies
 10. **co_await in catch blocks**: Cannot use `co_await` in catch handlers - use `g_CaptureExceptions` instead
 11. **Exception message operator precedence**: When using `% "message"` with `co_await`, parenthesize properly: `co_await ((...) % "message")`
+12. **Throwing in coroutines**: An exception that escapes a `TCFuture` coroutine outside a `g_CaptureExceptions` scope or `ECoroutineFlag_CaptureExceptions` crashes the process; put code that can throw inside one
 
 ## Advanced Features
 
