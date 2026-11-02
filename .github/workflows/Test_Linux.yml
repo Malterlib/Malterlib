@@ -24,6 +24,11 @@ on:
         required: false
         type: boolean
         default: false
+      tidy:
+        description: Run mib tidy over every workspace instead of building and testing the Tests workspace
+        required: false
+        type: boolean
+        default: false
       display_name:
         required: true
         type: string
@@ -71,7 +76,7 @@ env:
 
 jobs:
   build:
-    name: Build
+    name: ${{ inputs.tidy && 'Tidy' || 'Build' }}
     runs-on: ${{ inputs.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 240
     env:
@@ -232,16 +237,25 @@ jobs:
           malterlib-llvm-project-v2-
         enableCrossOsArchive: true
     - name: Build
+      if: ${{ !inputs.tidy }}
       shell: bash
       run: |
         set -e
         ./.github/workflows/Build.sh
+    - name: Tidy
+      if: inputs.tidy
+      shell: bash
+      run: |
+        set -e
+        ./.github/workflows/Tidy.sh
     - name: Stage deploy artifact
+      if: ${{ !inputs.tidy }}
       shell: bash
       run: mv Artifacts/Deploy.tar.zst "$DeployArtifact"
       env:
         DeployArtifact: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}.tar.zst
     - uses: actions/upload-artifact@v7
+      if: ${{ !inputs.tidy }}
       with:
         path: Deploy ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}.tar.zst
         archive: false
@@ -249,7 +263,9 @@ jobs:
     - uses: actions/upload-artifact@v7
       if: (failure() || success())
       with:
-        name: Tests ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }} ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}
+        name: >-
+          ${{ inputs.tidy && 'Tidy' || 'Tests' }} ${{ inputs.platform }} ${{ inputs.architecture }} ${{ inputs.configuration }}
+          ${{ inputs.sanitizer }}${{ inputs.no_assume && ' NoA' || '' }}
         path: Artifacts
         if-no-files-found: ignore
 
@@ -257,6 +273,7 @@ jobs:
     name: Test ${{ matrix.display_os }}
     runs-on: ${{ matrix.os }}
     needs: [build]
+    if: ${{ !inputs.tidy }}
     # Budget the 90-minute run and the 30-minute SuperUser run in Run_Linux_Tests.sh plus 10 minutes for setup and timeout reports.
     timeout-minutes: 130
     strategy:
