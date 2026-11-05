@@ -3,6 +3,8 @@
 
 set -e -o pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/Install_P4d.sh"
+
 # Shared between the native runner path and the container path
 
 ConfigurePostgresPath() {
@@ -94,17 +96,19 @@ if [[ "${1:-}" == "--inside-container" ]]; then
   if command -v apt-get >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install --yes --no-install-recommends ca-certificates git zstd postgresql nodejs npm util-linux passwd gdb libpython3-dev
+    apt-get install --yes --no-install-recommends ca-certificates curl git zstd postgresql nodejs npm util-linux passwd gdb libpython3-dev
   elif command -v dnf >/dev/null 2>&1; then
-    dnf install --assumeyes ca-certificates git zstd tar postgresql-server nodejs npm util-linux shadow-utils gdb python3-libs
+    dnf install --assumeyes ca-certificates curl git zstd tar postgresql-server nodejs npm util-linux shadow-utils gdb python3-libs
   elif command -v pacman >/dev/null 2>&1; then
-    pacman -Syu --noconfirm ca-certificates git zstd postgresql nodejs npm util-linux shadow gdb python
+    pacman -Syu --noconfirm ca-certificates curl git zstd postgresql nodejs npm util-linux shadow gdb python
   elif command -v zypper >/dev/null 2>&1; then
-    zypper --non-interactive install ca-certificates git zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow gdb python3
+    zypper --non-interactive install ca-certificates curl git zstd tar gzip findutils postgresql-server nodejs-default npm-default util-linux shadow gdb python3
   else
     echo "No supported package manager found" >&2
     exit 1
   fi
+
+  InstallP4d /usr/local/bin
 
   if ! grep -q '^::1' /etc/hosts; then
     echo '::1 localhost ip6-localhost ip6-loopback' >> /etc/hosts
@@ -160,6 +164,7 @@ if [[ -n "${Image:-}" ]]; then
     -v "$PWD/CrashDumps:/Deploy/CrashDumps" \
     -v "$HOME/.Malterlib/TestRuntimes:/TestRuntimes" \
     -v "$ScriptPath:/Run_Linux_Tests.sh:ro" \
+    -v "$(dirname "$ScriptPath")/Install_P4d.sh:/Install_P4d.sh:ro" \
     -e MalterlibFlakySuites \
     -e MalterlibTerminalWidth \
     -e MalterlibLogCategoryWidth \
@@ -189,6 +194,8 @@ sudo apt install --yes gdb libpython3-dev
 if ! ConfigurePostgresPath; then
   sudo apt install --yes postgresql
 fi
+
+InstallP4d /usr/local/bin sudo
 
 pwd
 loginctl enable-linger runner

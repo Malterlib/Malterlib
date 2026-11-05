@@ -36,6 +36,9 @@ export PATH="$PostgresBin:$PATH"
 initdb --version
 pg_ctl --version
 
+source "$(dirname "${BASH_SOURCE[0]}")/Install_P4d.sh"
+InstallP4d /usr/local/bin sudo
+
 pwd
 echo Num CPU threads: `getconf _NPROCESSORS_ONLN`
 ArtifactsPath="$PWD/Artifacts/Deploy.tar.zst"
