@@ -411,6 +411,13 @@ host can: macOS and Linux on macOS, Windows on Windows. Do it in each build syst
 - Space between keyword and parenthesis
 - Use `struct`, not `class`, for Malterlib types. Do not add a leading `public:` section just to expose the default interface. Only use `class` when editing third-party code or when an external API requires that exact spelling.
 
+#### Class Layout
+- Sections come in the order public, protected, private. Write each access label once: no label that repeats the access already in effect, like `public:` after the public members a struct starts with, or a second `private:` after a private section.
+- Within a section, members come in this order: types (nested classes, enums, aliases), constructors and the destructor, other functions (also operators), constants (`static constexpr`), variables (static and non-static data members).
+- Friend declarations come first in the private section, before its types, or first in the protected section when a class has no private members. A class with no private or protected members needs no friend classes.
+- When an earlier member is needed to compile, like a private type a public declaration uses, keep it there with a `NOLINT(malterlib-member-order)` that gives the reason.
+- `malterlib-member-order` and `malterlib-struct-not-class` check these rules.
+
 #### Parameter Ownership
 - For non-coroutine function parameters that would otherwise take an owning object by value, choose explicit semantics: use `const &` when borrowing/read-only, or `&&` when consuming/moving from the argument.
 - Do not use by-value parameters as a default sink pattern just to allow temporaries and lvalues. If a callsite needs to pass an lvalue to a consuming `&&` parameter, make the copy explicit at the callsite with `fg_TempCopy`.
