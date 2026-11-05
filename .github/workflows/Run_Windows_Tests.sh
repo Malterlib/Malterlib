@@ -31,6 +31,9 @@ if ! ConfigurePostgresPath; then
   fi
 fi
 
+source "$(dirname "${BASH_SOURCE[0]}")/Install_P4d.sh"
+InstallP4d "$(cygpath -u "$RUNNER_TEMP")/p4d"
+
 set -x
 if [[ "$MatrixOs" == "windows-2019" ]]; then
   MalterlibFlakySuites="$MalterlibFlakySuites;Malterlib/Cloud/SecretsManager/General"
