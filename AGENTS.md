@@ -38,6 +38,9 @@ MalterlibBuildShowProgress=false ./mib test
 # Get help
 ./mib --help
 ```
+
+### Pull Requests
+Read `Documentation/PullRequests.md` before preparing, opening or reviewing a Malterlib pull request. It covers branches, atomic commits, `Update repositories` commits, sub-repository and main pull requests, External fork rebases, fixing review findings and landing.
 <!-- Begin include: Malterlib/Core/CLAUDE.md -->
 # CLAUDE.md - Malterlib Framework and Core Module
 
