@@ -1,8 +1,2 @@
 {
-  "permissions": {
-    "deny": [
-      "Read(**/ImportCache/**)",
-      "Read(**/IC/**)"
-    ]
-  }
 }
