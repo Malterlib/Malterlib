@@ -27,10 +27,12 @@ codex --yolo review --commit <sha>
 codex --yolo review "Review this commit."
 
 # Review all changes compared to master across all Malterlib repositories
-codex --yolo review "Review all changes compared to master across all repositories. First run ./mib list-commits -l --no-color to discover the changed repositories and commits, then review those changes."
+codex --yolo review "Review all changes compared to master across all repositories. First run ./mib list-commits -l --no-color to discover the changed repositories and commits, then review those changes. For a rebased External fork, review only the fork's own patches and how the rebase changed them, using git range-diff against the upstream remote, not the upstream commits the list includes."
 ```
 
 When the user asks to review all changes compared to `master`, use the custom-prompt form above instead of `--base master`. The command `./mib list-commits -l --no-color` is required so the nested reviewer finds changes across all repositories, not just the current Git repository.
+
+For a rebased `External` fork, `./mib list-commits` also lists every upstream commit since the fork's old base. Those are upstream's, not the change's. The custom prompt for all changes covers this: it tells the nested reviewer to review a rebased fork's own patches and how the rebase changed them, with `git range-diff <old upstream base>..<old fork head> <new upstream base>..<new fork head>` against the `upstream` remote, and not the upstream commits.
 
 ## CRITICAL — waiting for codex results
 
