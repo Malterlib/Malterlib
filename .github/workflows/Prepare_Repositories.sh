@@ -163,6 +163,21 @@ case "$BuildPlatform" in
 		Deploy="$BuildScratchRoot/Deploy"
 		;;
 	macOS)
+		# Cloning the repositories runs dozens of git processes at once, and on the macOS arm64 runners the data they receive faster
+		# than their three CPUs unpack it fills the pool of 2 KB mbuf clusters, which can't grow past 32256 (about 63 MB) there. Every
+		# send then fails with "Send failure: No buffer space available". Each TCP connection may buffer up to autorcvbufmax, 4 MiB by
+		# default, so a limit of 1 MiB keeps 32 connections well within the pool. The pool's size, nmbclusters, can only be set at boot.
+		sudo sysctl -w net.inet.tcp.autorcvbufmax=1048576 || echo "Failed to limit the TCP receive buffers"
+
+		# "requests for memory denied" counts the kernel running out of network memory; netstat leaves it out while it is 0
+		fg_ReportNetworkMemory()
+		{
+			echo "Network memory:"
+			sysctl kern.ipc.nmbclusters net.inet.tcp.autorcvbufmax net.inet.tcp.recvspace hw.memsize || true
+			netstat -m
+		}
+		fg_ReportNetworkMemory
+		trap fg_ReportNetworkMemory EXIT
 		;;
 	*)
 		echo "Unsupported BuildPlatform: $BuildPlatform"

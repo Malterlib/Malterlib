@@ -62,7 +62,7 @@ jobs:
     with:
       platform: macOS
       architecture: arm64
-      runner: macos-26
+      runner: xcode-27
       display_name: Mac arm64
 
   warm_mac_x64:
