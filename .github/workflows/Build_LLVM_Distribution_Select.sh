@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+# Input|Display|Platform|Arch|Runner|BuildInContainer|ContainerImage|ContainerPlatform|Stage1|Stage2|Stage3|FinalRestoreStage
+# followed by optional runners for Stage1|Stage2|Stage3|final, each defaulting to Runner.
 Rows=(
 	"INPUT_LINUX_X64|Linux x64|Linux|x64|ubuntu-22.04|false|||stage1|instrumented|training|training"
 	"INPUT_LINUX_ARM64|Linux arm64|Linux|arm64|ubuntu-22.04-arm|false|||stage1|instrumented|training|training"
@@ -18,7 +20,8 @@ Matrix='{"include":['
 Separator=""
 
 for Row in "${Rows[@]}"; do
-	IFS='|' read -r InputName Display Platform Arch Runner BuildInContainer ContainerImage ContainerPlatform Stage1 Stage2 Stage3 FinalRestoreStage <<< "$Row"
+	IFS='|' read -r InputName Display Platform Arch Runner BuildInContainer ContainerImage ContainerPlatform \
+		Stage1 Stage2 Stage3 FinalRestoreStage Stage1Runner Stage2Runner Stage3Runner FinalRunner <<< "$Row"
 	if [[ "${!InputName}" != "true" ]]; then
 		continue
 	fi
@@ -26,7 +29,13 @@ for Row in "${Rows[@]}"; do
 	Matrix+="$Separator"
 	Matrix+="{\"display\":\"$Display\",\"platform\":\"$Platform\",\"arch\":\"$Arch\",\"runner\":\"$Runner\","
 	Matrix+="\"build_in_container\":$BuildInContainer,\"container_image\":\"$ContainerImage\",\"container_platform\":\"$ContainerPlatform\","
-	Matrix+="\"stage_1\":\"$Stage1\",\"stage_2\":\"$Stage2\",\"stage_3\":\"$Stage3\",\"final_restore_stage\":\"$FinalRestoreStage\"}"
+	Matrix+="\"stage_1\":\"$Stage1\",\"stage_2\":\"$Stage2\",\"stage_3\":\"$Stage3\",\"final_restore_stage\":\"$FinalRestoreStage\""
+	for StageRunner in "stage_1_runner=$Stage1Runner" "stage_2_runner=$Stage2Runner" "stage_3_runner=$Stage3Runner" "final_runner=$FinalRunner"; do
+		if [[ -n "${StageRunner#*=}" ]]; then
+			Matrix+=",\"${StageRunner%%=*}\":\"${StageRunner#*=}\""
+		fi
+	done
+	Matrix+="}"
 	Separator=","
 done
 

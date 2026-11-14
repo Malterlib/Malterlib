@@ -18,6 +18,26 @@ on:
       runner:
         required: true
         type: string
+      stage_1_runner:
+        description: The runner of stage 1, when it is not runner
+        required: false
+        type: string
+        default: ""
+      stage_2_runner:
+        description: The runner of stage 2, when it is not runner
+        required: false
+        type: string
+        default: ""
+      stage_3_runner:
+        description: The runner of stage 3, when it is not runner
+        required: false
+        type: string
+        default: ""
+      final_runner:
+        description: The runner of the final stage, when it is not runner
+        required: false
+        type: string
+        default: ""
       build_in_container:
         required: true
         type: boolean
@@ -72,7 +92,7 @@ jobs:
       display: ${{ inputs.display }} ${{ inputs.stage_1 }}
       platform: ${{ inputs.platform }}
       arch: ${{ inputs.arch }}
-      runner: ${{ inputs.runner }}
+      runner: ${{ inputs.stage_1_runner || inputs.runner }}
       build_in_container: ${{ inputs.build_in_container }}
       container_image: ${{ inputs.container_image }}
       container_platform: ${{ inputs.container_platform }}
@@ -91,7 +111,7 @@ jobs:
       display: ${{ inputs.display }} ${{ inputs.stage_2 }}
       platform: ${{ inputs.platform }}
       arch: ${{ inputs.arch }}
-      runner: ${{ inputs.runner }}
+      runner: ${{ inputs.stage_2_runner || inputs.runner }}
       build_in_container: ${{ inputs.build_in_container }}
       container_image: ${{ inputs.container_image }}
       container_platform: ${{ inputs.container_platform }}
@@ -111,7 +131,7 @@ jobs:
       display: ${{ inputs.display }} ${{ inputs.stage_3 }}
       platform: ${{ inputs.platform }}
       arch: ${{ inputs.arch }}
-      runner: ${{ inputs.runner }}
+      runner: ${{ inputs.stage_3_runner || inputs.runner }}
       build_in_container: ${{ inputs.build_in_container }}
       container_image: ${{ inputs.container_image }}
       container_platform: ${{ inputs.container_platform }}
@@ -137,7 +157,7 @@ jobs:
       display: ${{ inputs.display }} final
       platform: ${{ inputs.platform }}
       arch: ${{ inputs.arch }}
-      runner: ${{ inputs.runner }}
+      runner: ${{ inputs.final_runner || inputs.runner }}
       build_in_container: ${{ inputs.build_in_container }}
       container_image: ${{ inputs.container_image }}
       container_platform: ${{ inputs.container_platform }}
