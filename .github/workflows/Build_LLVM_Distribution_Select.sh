@@ -6,12 +6,15 @@ set -euo pipefail
 
 # Input|Display|Platform|Arch|Runner|BuildInContainer|ContainerImage|ContainerPlatform|Stage1|Stage2|Stage3|FinalRestoreStage
 # followed by optional runners for Stage1|Stage2|Stage3|final, each defaulting to Runner.
+#
+# macOS x64 builds its compilers on the arm64 runners, which are about twice as fast, and trains the instrumented compiler,
+# which is an x86_64 program, on an Intel runner.
 Rows=(
 	"INPUT_LINUX_X64|Linux x64|Linux|x64|ubuntu-22.04|false|||stage1|instrumented|training|training"
 	"INPUT_LINUX_ARM64|Linux arm64|Linux|arm64|ubuntu-22.04-arm|false|||stage1|instrumented|training|training"
 	"INPUT_LINUX_X86|Linux x86|Linux|x86|ubuntu-22.04|true|debian:12@sha256:8a8cd02c5912770b4980228a54d4aff9e4f986f1eb2525d2d371dec5232cefcc|linux/386|stage1|||stage1"
 	"INPUT_MACOS_ARM64|macOS arm64|macOS|arm64|macos-26|false|||stage1|instrumented|training|training"
-	"INPUT_MACOS_X64|macOS x64|macOS|x64|macos-26-intel|false|||stage1|instrumented|training|training"
+	"INPUT_MACOS_X64|macOS x64|macOS|x64|macos-26-intel|false|||stage1|instrumented|training|training|macos-26|macos-26|macos-26-intel|macos-26"
 	"INPUT_WINDOWS_X64|Windows x64|Windows|x64|windows-2022|false|||stage0|pgo||pgo"
 	"INPUT_WINDOWS_ARM64|Windows arm64|Windows|arm64|windows-11-arm|false|||stage0|pgo||pgo"
 )
