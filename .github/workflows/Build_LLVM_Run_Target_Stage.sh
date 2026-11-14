@@ -359,9 +359,29 @@ fg_RestoreBuildState()
 	"$BsdTar" -xf "$Archive" -C "$MALTERLIB_LLVM_ARTIFACT_ROOT"
 }
 
+fg_GetHostArch()
+{
+	case "$(uname -m)" in
+		arm64|aarch64)
+			echo arm64
+			;;
+		x86_64)
+			echo x64
+			;;
+		*)
+			uname -m
+			;;
+	esac
+}
+
 fg_GetBundledBsdTar()
 {
 	local TarArch="$ARCH"
+
+	# A macOS stage can run on a runner of another architecture than the distribution it builds
+	if [[ "$PLATFORM" == "macOS" ]]; then
+		TarArch="$(fg_GetHostArch)"
+	fi
 
 	local BsdTar="Binaries/Malterlib/$PLATFORM/$TarArch/bsdtar"
 	if [[ ! -f "$BsdTar" && -f "$BsdTar.exe" ]]; then
