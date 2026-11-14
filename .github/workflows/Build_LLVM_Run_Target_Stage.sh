@@ -112,6 +112,39 @@ fg_SetLinuxSwap()
 	echo "::endgroup::"
 }
 
+# The stages after stage 1 run x86_64 programs built for the macOS x64 distribution, which an arm64 runner can only run
+# under Rosetta 2.
+fg_CheckMacOSTargetCodeRuns()
+{
+	local HostArch
+	HostArch="$(fg_GetHostArch)"
+
+	if [[ "$HostArch" == "$ARCH" ]]; then
+		return 0
+	fi
+
+	case "$LLVM_STAGE" in
+		instrumented|training|final)
+			;;
+		*)
+			return 0
+			;;
+	esac
+
+	if [[ "$HostArch" != "arm64" || "$ARCH" != "x64" ]]; then
+		echo "::error::The macOS $ARCH $LLVM_STAGE stage runs $ARCH programs, which can't run on this $HostArch runner."
+		exit 1
+	fi
+
+	if ! arch -x86_64 /usr/bin/true; then
+		echo "::error::The macOS x64 $LLVM_STAGE stage runs x86_64 programs, but this arm64 runner can't run x86_64 code:" \
+			"Rosetta 2 is not installed. Run the stage on an Intel runner or on a runner image with Rosetta 2."
+		exit 1
+	fi
+
+	echo "x86_64 programs run under Rosetta 2 on this arm64 runner"
+}
+
 fg_FreeMacOSDiskSpace()
 {
 	df -h
@@ -577,6 +610,7 @@ case "$PLATFORM" in
 		fi
 		;;
 	macOS)
+		fg_CheckMacOSTargetCodeRuns
 		fg_DisableMacOSSpotlight
 		fg_PrepareMacOSDependencies
 		;;
