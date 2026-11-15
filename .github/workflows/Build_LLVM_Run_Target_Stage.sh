@@ -87,12 +87,19 @@ fg_SetLinuxSwap()
 	fg_ReportLinuxMemoryAndSwap
 	echo "::endgroup::"
 
-	SwapFile="$(swapon --show=NAME | tail -n 1 || true)"
-	if [[ -z "$SwapFile" ]]; then
-		SwapFile="/swapfile"
-	fi
+	# The swap of a runner image is a file or a device. A file is replaced where it is, which is the disk the image has
+	# room on. A device, as zram is, is turned off: it keeps what is swapped to it in memory. The swap file is then on
+	# the root disk.
+	local RunnerSwap
+	SwapFile="/swapfile"
+	for RunnerSwap in $(swapon --show=NAME --noheadings || true); do
+		sudo swapoff "$RunnerSwap" 2>/dev/null || true
+		if [[ -f "$RunnerSwap" ]]; then
+			sudo rm -f "$RunnerSwap"
+			SwapFile="$RunnerSwap"
+		fi
+	done
 
-	sudo swapoff "$SwapFile" 2>/dev/null || true
 	sudo rm -f "$SwapFile"
 	sudo fallocate -l 12G "$SwapFile"
 	sudo chmod 600 "$SwapFile"

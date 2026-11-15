@@ -357,9 +357,17 @@ jobs:
     - name: Set Swap
       shell: bash
       run: |
-          export SWAP_FILE=$(swapon --show=NAME | tail -n 1)
-          sudo swapoff $SWAP_FILE
-          sudo rm $SWAP_FILE
+          # The swap of a runner image is a file or a device. A file is replaced where it is, which is the disk the
+          # image has room on. A device, as zram is, is turned off: it keeps what is swapped to it in memory. The
+          # swap file is then on the root disk.
+          export SWAP_FILE=/main.swap
+          for RunnerSwap in $(swapon --show=NAME --noheadings); do
+            sudo swapoff "$RunnerSwap"
+            if [[ -f "$RunnerSwap" ]]; then
+              sudo rm "$RunnerSwap"
+              export SWAP_FILE="$RunnerSwap"
+            fi
+          done
           sudo fallocate -l 12G $SWAP_FILE
           sudo chmod 600 $SWAP_FILE
           sudo mkswap $SWAP_FILE
