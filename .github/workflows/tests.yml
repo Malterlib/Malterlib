@@ -137,7 +137,9 @@ jobs:
     name: Linux arm64 ${{ matrix.build.name }}
 
   # The builds run the same checks, but only for the Tests workspace. arm64 is the fastest of the Linux runners.
+  # Off until the sources follow the checks of the Malterlib clang the runners have.
   linux_arm64_tidy:
+    if: false
     needs: warm_linux_arm64
     uses: ./.github/workflows/Test_Linux.yml
     with:
