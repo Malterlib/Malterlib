@@ -46,6 +46,11 @@ on:
         required: false
         type: string
         default: ""
+      prepopulate_final:
+        description: Also take the final stage from the prepopulate run, instead of building it from this run's sources
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -102,4 +107,5 @@ jobs:
       stage_3: ${{ matrix.stage_3 }}
       final_restore_stage: ${{ matrix.final_restore_stage }}
       prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      prepopulate_final: ${{ inputs.prepopulate_final }}
     secrets: inherit

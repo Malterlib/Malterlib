@@ -67,6 +67,13 @@ on:
         required: false
         type: string
         default: ""
+      prepopulate_final:
+        description: >-
+          Whether the final stage is also taken from the prepopulate run. Without it the stages before the final one
+          come from that run and the distribution is built from this run's sources.
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -163,7 +170,7 @@ jobs:
       container_platform: ${{ inputs.container_platform }}
       stage: final
       restore_stage: ${{ inputs.final_restore_stage }}
-      prepopulate_run_id: ${{ inputs.prepopulate_run_id }}
+      prepopulate_run_id: ${{ inputs.prepopulate_final && inputs.prepopulate_run_id || '' }}
       archive_build_state: false
       create_distribution_archive: true
     secrets: inherit
