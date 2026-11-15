@@ -201,7 +201,10 @@ jobs:
 
           if [[ -n "$StatusJobId" ]]; then
             StatusLog="$(mktemp)"
-            if gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$StatusJobId/logs" > "$StatusLog"; then
+            # gh refuses to print a response that has terminal escape sequences, as job logs do
+            if curl --fail --silent --show-error --location \
+              --header "Authorization: Bearer $GH_TOKEN" --header "Accept: application/vnd.github+json" \
+              "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/jobs/$StatusJobId/logs" > "$StatusLog"; then
               if grep -Eq 'ATTEMPT_[0-9]+_STATUS:[[:space:]]+success' "$StatusLog"; then
                 Status=success
               else
