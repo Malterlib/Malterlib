@@ -12,6 +12,17 @@ export MalterlibGenerateCompileCommands=true
 echo ${SECONDS}s
 ./mib generate
 
+# Both checks run before the job fails, so that one run reports the problems of both.
+Failed=()
+
 echo ${SECONDS}s
-./mib tidy --sorted
+./mib validate || Failed+=("mib validate")
+
 echo ${SECONDS}s
+./mib tidy --sorted || Failed+=("mib tidy")
+echo ${SECONDS}s
+
+if [[ ${#Failed[@]} -ne 0 ]]; then
+	echo "Failed: ${Failed[*]}"
+	exit 1
+fi
