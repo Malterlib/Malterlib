@@ -224,7 +224,7 @@ Fix what the hook reports instead of committing with `--no-verify`.
 
 #### Responding to the Malterlib checks
 Read the documentation of a check before changing code for it:
-`External/llvm-project/clang-tools-extra/docs/clang-tidy/checks/malterlib/<check>.rst`, and
+`External/llvm-project/clang-tools-extra/docs/clang-tidy/checks/malterlib/<name>.rst` for `malterlib-<name>`, and
 `External/llvm-project/clang-tools-extra/docs/clang-tidy/MalterlibOptionsFile.rst` for the shared options. It tells what the
 check can and can't see, and how to describe code it can't see.
 
@@ -235,9 +235,9 @@ check can and can't see, and how to describe code it can't see.
   `Malterlib/Core/ClangTidyOptions.yaml`, such as `SafeCallees` for a function that keeps a closure alive while it runs
   it, which matches by unqualified name and so covers every function of that name. Use them only where what they state
   is true of the code.
-- When nothing fits, suppress the report with `// NOLINTNEXTLINE(<check>): <why the code is correct>`, and report the
-  false positive or the limitation in Favro, in the Malterlib organization: the check, a minimal example of the code and
-  why it is correct.
+- When nothing fits, suppress the report with `// NOLINTNEXTLINE(malterlib-<name>): <why the code is correct>`, and
+  report the false positive or the limitation in Favro, in the Malterlib organization: the check, a minimal example of
+  the code and why it is correct.
 
 ### Sub-Repositories
 A checkout is a tree of Git repositories that `mib` manages: the root, which is Malterlib itself or a product built on it,
