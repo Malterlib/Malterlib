@@ -233,7 +233,8 @@ check can and can't see, and how to describe code it can't see.
   don't switch to `TCUnsafeFuture` to avoid one. Describe the code to the check instead: the annotations in
   `Mib/Core/TidyAnnotations`, such as `DMibActorEntries` or `DMibKeepsArgument`, or the lists in
   `Malterlib/Core/ClangTidyOptions.yaml`, such as `SafeCallees` for a function that keeps a closure alive while it runs
-  it. Use them only where what they state is true of the code.
+  it, which matches by unqualified name and so covers every function of that name. Use them only where what they state
+  is true of the code.
 - When nothing fits, suppress the report with `// NOLINTNEXTLINE(<check>): <why the code is correct>`, and report the
   false positive or the limitation in Favro, in the Malterlib organization: the check, a minimal example of the code and
   why it is correct.
@@ -3023,14 +3024,14 @@ auto Functor = g_ActorFunctor
 ```cpp
 // Ensure an actor is destroyed even if the coroutine exits early
 TCActor<CFileTransferSend> Upload = fg_ConstructActor<CFileTransferSend>(_Path);
-auto DestroyUpload = co_await fg_AsyncDestroy(Upload); // Destroys Upload when DestroyUpload goes out of scope
+auto DestroyUpload = co_await fg_AsyncDestroy(Upload);
 
-// Destroy with a cleanup function
+// Destroy with a cleanup function, which moves captured values into locals before its first suspension
 auto DestroyResult = co_await fg_AsyncDestroy
 	(
 		[&]() -> TCFuture<void>
 		{
-			auto ToDestroy = fg_Move(AsyncResult); // Copy or move out before the first suspension
+			auto ToDestroy = fg_Move(AsyncResult);
 			co_await fg_Move(ToDestroy).f_Destroy();
 			co_return {};
 		}
@@ -3061,12 +3062,19 @@ TCFuture<void> f_Process(CStr _Key)
 ```
 
 - Use the `fg_AsyncDestroy` helper instead of manual `g_OnScopeExit` plumbing when an actor/functor needs structured teardown.
-- `co_await` the helper and keep its result in a named variable: the cleanup runs when that variable goes out of scope. Do not move the result to a longer-lived place, since the cleanup would then run after the locals it refers to are gone.
+- `co_await` the helper and keep its result in a named variable: the cleanup starts when that variable goes out of scope. Do not move the result to a longer-lived place: the cleanup would then run after the locals it refers to are gone, and the result must not outlive the coroutine that awaited the helper, since its destructor registers the cleanup with that coroutine.
 - The cleanup function may capture by reference, but may use those references only before its own first real suspension. `co_await ECoroutineFlag_CaptureExceptions` does not suspend, so captured references are still safe across that await. After the first actual suspension point of the cleanup function the references WILL be invalid, so copy or move anything needed into locals before that point.
 - These helpers schedule destruction on the owning actor.
 - Pair `fg_OnResume` with any pointer captures when the coroutine is going to suspend before dereferencing actor-owned data. While the coroutine is cancelled if the actor dies, other actor calls can mutate or erase those structures during the suspension, so re-validation on resume avoids stale references.
 
 ## Local Command Sessions
+
+`MalterlibDistributedAppLocalSocketPrefix` moves the local sockets of a distributed app from
+its root directory to a directory under the prefix derived from the root directory, for a root
+on a filesystem that cannot host unix domain sockets, such as a virtiofs share in a container.
+Socket paths too long for that directory fall back to a directory under `/tmp`. On POSIX the
+prefix must be owned by a trusted user and be sticky or writable only by trusted users, and
+untrusted users must not be able to replace it or any of its ancestors.
 
 For local command-line control, register for standard input before calling
 `f_RegisterForScreenChange`. Keep a stdin subscription alive while resize notifications
