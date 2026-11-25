@@ -301,7 +301,9 @@ checkout. `git pull` and `git merge` have no such hook, so after pulling, mergin
   branch that belongs on the default branches instead.
 
 `-f` moves a branch that already exists to the current commit, even backwards, in every repository, so preview it with
-`-p` (pretend) first. `-n <wildcard>` limits it to matching repositories.
+`-p` (pretend) first. `-n <wildcard>` limits it to matching repositories, and `-n '<Wildcard>,<Wildcard>'` to those that
+match any of several. `status`, `list-repos`, `git`, `repo-run`, `push`, `list-commits`, `cleanup-branches`,
+`cleanup-tags`, `format`, `validate`, `tidy`, `release-package` and `check-license` take the same `-n`.
 
 A branch stacked on another branch that hasn't landed yet has that branch as its base: `./mib base <Branch>` sets it for
 the root's current branch, `./mib base` shows it and `./mib base --clear` removes it. `./mib branch <Name> --base-branch
@@ -318,6 +320,44 @@ after sub-repository commits are rewritten. Use it instead of editing or committ
 `./mib push` pushes only the repositories whose branch differs from origin's default branch, deepest first, so a pushed
 pin never names a commit others can't fetch. `./mib push -p` (pretend) lists the `git push` commands it would run, group
 by group, without pushing, including which repositories get a new branch on origin; check it before pushing.
+
+### Commit Messages
+A commit message tells a reader of the history what the commit changes and why. It is read as plain text, in `git log`
+and in terminals, so write it to read well unrendered.
+
+- The subject is one line of at most 190 characters that says what the commit does, in imperative prose: `Validate a
+  Perforce root in mib validate`. No trailing period and no prefixes such as `Fix:` or a module name.
+- A blank line follows, then the body, with its lines filled to 100 columns: rewrap a narrower body too. A small change
+  that the subject describes fully needs no body.
+- Start the body with what was wrong or missing, then say what the commit does about it, with the reasons a reader needs
+  to see why it works this way. An addition, such as a feature, an option, an API or a test, starts with what it adds and
+  what it is for, naming its caller where there is one. Where a change shows no symptom, as a refactor, state what was
+  there before instead. Don't invent a problem or a reason.
+- Keep what changes an outcome a user or maintainer sees: the behavior, an error, a refusal, a different result. Leave
+  how the code gets there, and the edge cases it handles, to its comments and tests, which stay next to the behavior.
+- Match the length to the change: a small fix takes a few lines, and only a large change needs several paragraphs.
+  Mention the tests only when they are what a reader needs to know.
+- Write short paragraphs with one subject each, and a list for parallel items such as cases, errors or options. Start a
+  list item with `* ` and indent its wrapped lines by two spaces, so the list reads as plain text. Backticks around a
+  name or code are fine; use no other Markdown.
+- Name a file or function where it helps a reader find the change, as a new shared helper, and the public functions
+  of a commit whose point is a new API, not to list what the commit touched.
+- A commit that is one part of a change across repositories describes its own diff, and names the change it serves where
+  that is its reason.
+- In an `External` fork, a patch's subject may follow the conventions of its upstream, such as a `component:` prefix,
+  and its body follows these. Keep the trailers of upstream contributors, such as `Signed-off-by` and `Co-Authored-By`,
+  and git's form of a revert. A commit cherry-picked from upstream keeps its upstream message.
+- When folding a fix into a commit, update its message only when what the commit does changed.
+
+For example:
+
+```
+Give string compares a signed result wider than the characters, whatever their type
+
+Only ch8, ch16 and ch32 got a signed, wider result, so a compare of char8_t, of char16_t on Windows
+or of wchar_t elsewhere could report less as greater: fg_StrCmp(u"abc", u"abd") was 0xFFFE on
+Windows. The result is now a signed integer twice the size of the larger character type.
+```
 
 ### Working with Workspaces
 Workspaces are collections of build targets. Common workspaces include:
@@ -3046,6 +3086,12 @@ TCFuture<void> f_Process(CStr _Key)
 - Use the `fg_AsyncDestroy` helper instead of manual `g_OnScopeExit` plumbing when an actor/functor needs structured teardown.
 - Schedule the helper before the first suspension and capture by reference only while the cleanup body stays before its first real suspension. `co_await ECoroutineFlag_CaptureExceptions` does not suspend, so captured references are still safe across that await. After the first actual suspension point of the cleanup function the references WILL be invalid, so copy or move anything needed into locals before that point.
 - These helpers schedule destruction on the owning actor.
+- An actor destroys a dispatched function and its captures after the function's result has resumed the caller. When the
+  captures must be gone before the coroutine returns, as a copy of something the caller destroys afterwards, use
+  `auto Synchronize = co_await fg_SynchronizeOnExit(Actor);`, which waits for a call on the actor when the coroutine
+  returns. Given a blocking actor checkout, it also releases the checkout only after that call. It covers what the
+  coroutine dispatched and awaited, not a dispatched coroutine that moves on to another actor. Sham actors, as `fg_ThisConcurrentActor()`, pick a
+  real actor for each call and direct call actors run calls on the caller's thread, so they are refused.
 - Pair `fg_OnResume` with any pointer captures when the coroutine is going to suspend before dereferencing actor-owned data. While the coroutine is cancelled if the actor dies, other actor calls can mutate or erase those structures during the suspension, so re-validation on resume avoids stale references.
 
 ## Local Command Sessions
